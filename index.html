@@ -6,928 +6,255 @@
     <title>Tempahan Bas Pulang Bermalam</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>body{min-height:100vh} .small-btn{padding:.28rem .5rem;font-size:.8rem}</style>
 </head>
 <body class="bg-light">
-    <div class="container-fluid" style="padding: 0;">
-        <div class="bg-white rounded shadow p-3" style="margin: 0; border-radius: 0;">
-            <h1 class="text-center mb-2">
-                <i class="fas fa-bus"></i> Tempahan Bas Pulang Bermalam
-            </h1>
+    <div class="container py-3">
+        <div class="bg-white rounded shadow p-3">
+            <h1 class="h4 text-center mb-3"><i class="fas fa-bus"></i> Tempahan Bas Pulang Bermalam</h1>
 
-            <div id="message" class="alert mb-2" role="alert" style="display: none;"></div>
+            <div id="message" class="alert mb-2" role="alert" style="display:none"></div>
 
-            <h5 class="text-muted mb-3 text-center" id="journeyHeader" style="cursor: pointer;" title="Klik untuk edit">
-                <i class="fas fa-map-marker-alt"></i> Perjalanan dari MTSD ke Alor Setar
-                <br><small class="text-muted">Khamis, 20 Nov 2025</small>
-            </h5>
-
-            <h5 class="card-title mb-2">
-                <i class="fas fa-users"></i> Maklumat Pelajar
-            </h5>
-
-            <div class="mb-2">
-                <label class="form-label small"><i class="fas fa-venus-mars"></i> Jantina</label>
-                <select class="form-select form-select-sm" id="genderFilter" onchange="updateStudentsByFilter()">
-                    <option value="">-- Pilih Jantina --</option>
-                    <option value="LELAKI">Lelaki</option>
-                    <option value="PEREMPUAN">Perempuan</option>
-                </select>
-            </div>
-
-            <div class="mb-2">
-                <label class="form-label small"><i class="fas fa-graduation-cap"></i> Tingkatan</label>
-                <select class="form-select form-select-sm" id="classFilter" onchange="updateStudentsByFilter()">
-                    <option value="">-- Pilih Tingkatan --</option>
-                    <option value="1">Tingkatan 1</option>
-                    <option value="2">Tingkatan 2</option>
-                    <option value="3">Tingkatan 3</option>
-                    <option value="4">Tingkatan 4</option>
-                    <option value="5">Tingkatan 5</option>
-                </select>
-            </div>
-
-            <div id="studentList" class="list-group mb-2">
-                <div class="text-center text-muted py-4">
-                    <i class="fas fa-inbox"></i> Pilih jantina dan tingkatan untuk melihat senarai pelajar
+            <div class="text-center mb-3">
+                <div id="journeyHeader" class="small text-muted p-2" style="cursor:pointer;background-color:#fff3cd;border-left:4px solid #ffc107;display:inline-block;border-radius:4px">
+                    <i class="fas fa-map-marker-alt"></i> Perjalanan dari MTSD ke Alor Setar<br><small class="text-muted">📅 Khamis, 20 Nov 2025</small>
                 </div>
             </div>
 
-            <div class="mt-2 alert alert-info d-none" id="selectedStudentAlert">
-                <i class="fas fa-check-circle"></i> Dipilih: <strong id="selectedStudentText"></strong>
-            </div>
-            
-            <div class="mt-2 d-flex gap-2 justify-content-center mb-3">
-                <button id="confirmBtn" class="btn btn-success btn-sm" onclick="confirmBooking()">
-                    <i class="fas fa-check"></i> Sahkan Tempahan
-                </button>
-            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="mb-2">
+                        <label class="form-label small">Jantina</label>
+                        <select id="genderFilter" class="form-select form-select-sm" onchange="updateStudentsByFilter()">
+                            <option value="">-- Pilih Jantina --</option>
+                            <option value="LELAKI">Lelaki</option>
+                            <option value="PEREMPUAN">Perempuan</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small">Tingkatan</label>
+                        <select id="classFilter" class="form-select form-select-sm" onchange="updateStudentsByFilter()">
+                            <option value="">-- Pilih Tingkatan --</option>
+                            <option value="1">T1</option>
+                            <option value="2">T2</option>
+                            <option value="3">T3</option>
+                            <option value="4">T4</option>
+                            <option value="5">T5</option>
+                        </select>
+                    </div>
 
-            <h5 class="card-title mb-2">
-                <i class="fas fa-list"></i> Senarai Tempahan
-            </h5>
-            
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <div>
-                    <input type="checkbox" id="selectAllCheckbox" class="form-check-input" onchange="toggleSelectAll(this.checked)">
-                    <label class="form-check-label small ms-2" for="selectAllCheckbox">Pilih Semua</label>
+                    <div class="mt-3 text-center">
+                        <div id="selectedStudentAlert" class="alert alert-info d-none small mb-2"><i class="fas fa-check-circle"></i> Dipilih: <strong id="selectedStudentText"></strong></div>
+                        <button id="confirmBtn" class="btn btn-success btn-sm" onclick="confirmBooking()"> <i class="fas fa-check"></i> Sahkan Tempahan</button>
+                    </div>
                 </div>
-                <div class="d-flex gap-2">
-                    <button id="downloadBtn" class="btn btn-info btn-sm" onclick="downloadSenarai()" title="Muat Turun Senarai">
-                        <i class="fas fa-download"></i>
-                    </button>
-                    <button id="bulkDeleteBtn" class="btn btn-danger btn-sm" onclick="openAdminModalForBulkDelete()" disabled title="Padam Terpilih" aria-label="Padam Terpilih">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
 
-            <div id="bookedList" class="list-group">
-                <div class="text-center text-muted py-4">
-                    <i class="fas fa-inbox"></i> Tiada tempahan
+                <div class="col-md-4">
+                    <h6 class="mb-2">Senarai Pelajar</h6>
+                    <div id="studentList" class="list-group">
+                        <div class="text-center text-muted py-4"><i class="fas fa-inbox"></i> Pilih jantina dan tingkatan</div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Admin Password Modal -->
-            <div class="modal fade" id="adminModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="adminModalTitle">Pengesahan Admin</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="col-md-4">
+                    <h6 class="mb-2">Senarai Tempahan</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <div>
+                            <input id="selectAllCheckbox" type="checkbox" class="form-check-input" onchange="toggleSelectAll(this.checked)"> <label class="form-check-label small ms-1">Pilih Semua</label>
                         </div>
-                        <div class="modal-body" id="adminModalBody">
-                            <label class="form-label small">Kata Laluan Admin:</label>
-                            <input type="password" id="adminPassword" class="form-control form-control-sm" placeholder="Masukkan kata laluan">
+                        <div>
+                            <button id="bulkDeleteBtn" class="btn btn-danger btn-sm d-none" onclick="openAdminModalForBulkDelete()" disabled aria-hidden="true"><i class="fas fa-trash"></i></button>
                         </div>
-                        <div class="modal-footer" id="adminModalFooter">
-                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="deleteAfterAuth()">Padam</button>
-                        </div>
+                    </div>
+                    <div id="bookedList" class="list-group" style="max-height:420px;overflow:auto">
+                        <div class="text-center text-muted py-4"><i class="fas fa-inbox"></i> Tiada tempahan</div>
                     </div>
                 </div>
             </div>
+
+            <!-- admin import moved to footer -->
         </div>
+    </div>
+
+    <!-- Admin modals -->
+    <div class="modal fade" id="adminModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 id="adminModalTitle" class="modal-title">Pengesahan Admin</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div id="adminModalBody" class="modal-body"><label class="form-label small">Kata Laluan Admin:</label><input id="adminPassword" class="form-control form-control-sm" type="password"></div><div id="adminModalFooter" class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-danger btn-sm" onclick="deleteAfterAuth()">Padam</button></div></div></div></div>
+
+    <div class="modal fade" id="adminImportModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Import Data Pelajar</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div id="importMessage" class="alert mb-3" style="display:none"></div>
+            <div id="adminImportPasswordContainer">
+                <label class="form-label small">Kata Laluan Admin:</label>
+                <input id="adminImportPassword" class="form-control form-control-sm mb-2" type="password">
+            </div>
+            <div id="adminImportLoggedInNotice" class="alert alert-info mb-2" style="display:none">Admin sudah log masuk — tidak perlu kata laluan.</div>
+            <label class="form-label small">Pilih Fail CSV</label>
+            <input id="csvImportFile" class="form-control form-control-sm mb-2" type="file" accept=".csv" onchange="previewImportCSV()">
+                <div id="importPreviewSection" style="display:none"><div class="table-responsive"><table class="table table-sm table-bordered"><thead id="importPreviewHead"></thead><tbody id="importPreviewBody"></tbody></table></div><small id="importRowCount" class="text-muted"></small></div></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button id="confirmImportBtn" class="btn btn-danger btn-sm" onclick="confirmImportStudents()" disabled>Tukar Data Pelajar</button></div></div></div></div>
+
+            <div class="modal fade" id="editJourneyModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Edit Perjalanan</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><label class="form-label small">Keterangan Perjalanan</label><input id="editJourneyText" class="form-control form-control-sm mb-2" type="text"><label class="form-label small">Tarikh / Nota (optional)</label><input id="editJourneyDate" class="form-control form-control-sm mb-2" type="text"><small class="text-muted">Contoh: Khamis, 20 Nov 2025</small></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary btn-sm" onclick="openAdminModalForEditConfirm()">Simpan</button></div></div></div></div>
+
+            <!-- Footer: admin icon placed here -->
+    <style>
+        #adminFooterBtn{position:fixed;right:14px;bottom:14px;z-index:1050}
+        #adminFooterBtn .btn{width:40px;height:40px;border-radius:50%;padding:0;display:inline-flex;align-items:center;justify-content:center}
+        #adminFooterBtn .btn i{font-size:14px}
+    </style>
+        <div id="adminFooterBtn">
+        <span id="adminStatus" class="badge bg-secondary me-2" style="font-size:0.75rem;vertical-align:middle">Admin: Tidak Log Masuk</span>
+        <button id="adminLoginBtn" class="btn btn-primary shadow" title="Admin" onclick="openAdminLoginModal()">
+            <i class="fas fa-user-lock" style="font-size:14px;color:#fff"></i>
+        </button>
+        <button id="footerDownloadBtn" class="btn btn-info shadow ms-2" title="Muat Turun" onclick="downloadSenarai()" disabled style="margin-left:8px;">
+            <i class="fas fa-download" style="font-size:14px;color:#fff"></i>
+        </button>
+        <button id="footerBulkDeleteBtn" class="btn btn-danger shadow ms-2" title="Padam Terpilih" onclick="openAdminModalForBulkDelete()" disabled style="margin-left:8px;">
+            <i class="fas fa-trash" style="font-size:14px;color:#fff"></i>
+        </button>
+        <button id="footerImportBtn" class="btn btn-warning shadow ms-2" title="Import CSV (Admin)" onclick="openAdminImportModal()" style="margin-left:8px;">
+            <i class="fas fa-file-upload" style="font-size:14px;color:#fff"></i>
+        </button>
+        <button id="footerEditJourneyBtn" class="btn btn-secondary shadow ms-2" title="Edit Perjalanan" onclick="openAdminModalForEdit()" aria-label="Edit Perjalanan" style="margin-left:8px;">
+            <i class="fas fa-pen" style="font-size:14px;color:#fff"></i>
+        </button>
+        <button id="adminLogoutBtn" class="btn btn-danger shadow d-none ms-2" title="Log Keluar" onclick="adminLogout()" style="margin-left:6px; margin-top:6px;">
+            <i class="fas fa-power-off" style="font-size:14px;color:#fff"></i>
+        </button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const TOTAL_SEATS = 25;
+        // Minimal, cleaned app script
         const BUS_CAPACITY = 44;
         const MAX_BUSES = 2;
         const TOTAL_CAPACITY = BUS_CAPACITY * MAX_BUSES;
         const ADMIN_PASSWORD = 'power@123!';
-        let pendingDeleteName = null;
-        const allStudentsData = [
-            {"nama":"SAFIYYAH BINTI IBRAHIM","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"NUR NAFISAH BINTI ABDUL HAMID","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"NUR AQILAH BINTI AHMAD NASIR","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"NURUL SUFIAH AKHTAR BINTI MOHAMAD","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"DARWISYA HUMAYRA BINTI HANIF OMAR","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"BALQIS HAIDA BINTI AHMAD TARMIMI","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"NUR AUNI HANNANI BINTI MUHAMAD NAIM","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"NUR AFIYA FAQIHAH BINTI MUHAMMAD FUAD","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"NURUL IMAN BINTI MOHAMAD HAZRI","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"SHARIFAH NUR ANEESA AL IDRUS BINTI SYED SAIFUL AMZA","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"PUTERI HANI NURDELISA BINTI ZAKARIA","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"NUR HANAN ZAHRA BINTI RAHIMI ZAMAN","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"NUR DAMIA SOLEHAH BINTI MOHD AMIN","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"MIA HUMAIRA BINTI SHAHIDAN","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"NUR AUNI DAMIA BINTI NUR ZAIDY","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"NUR LIYANA BINTI ANUAR","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"NUR DAMIA' BINTI MOHD HAYAZI","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"NUR SAFIYYAH AMANI BINTI ZUL BASRI","jantina":"PEREMPUAN","tingkatan":"1"},
-            {"nama":"MUKHLIS BIN AHMAD","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"AHMAD RUJHAN BIN MOHAMAD RIZAM","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"MUHAMMAD ARIQ FURQAN BIN MOHD AFIF WAJDI","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"MUHAMMAD AKIF NUFAIL BIN MOHD NAZRI","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"ABDULLAH ANNASIH BIN MUHAMMAD 'ABID","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"MUHAMMAD ZAHIRUL AKRAM BIN MUHAMAD AZMAN","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"MUHAMMAD HAZIQ BIN MOHAMMAD HASSNAN","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"MUHAMMAD RIFQI BIN MUHAMAD ZIKRIE","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"NUR MUHAMMAD HURAIRAH BIN NORAZMI","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"IQBAL HAZIM BIN ZULKIFLI","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"AHMAD FAHIM BIN MOHD HAYAZI","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"AMSYAR HADIFF BIN ZAHRI","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"ADAM WAFIY BIN MUHD MOHAR AZAM","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"MUHAMMAD SOLAHUDDIN BIN MOHD FAUZAN","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"MUHAMMAD ZIYADULKHOIR BIN MOKHTAR","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"MUHAMMAD HAZIF FAWAZ BIN MOHD AMIRUL ARAFA","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"MUHAMMAD AKIF FIRDAUS BIN AHMAD","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"MUHAMMAD ALI HAKIMI BIN MUHAMMAD IZZWAN","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"AMJAD KHALIF BIN ZAHRI","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"MUHAMMAD HAFIY HAZIQ BIN MOHD HUSNI","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"MUHAMMAD IRFAN WAFI BIN MD ZAKI","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"WAN ANIS RAYYAN BIN WAN MOHAMAD FESOL","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"AHMAD AIMAN ARSYAD BIN MUHD AMAN","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"MUHAMMAD HARIS BIN MUHAMMAD YUSOF","jantina":"LELAKI","tingkatan":"1"},
-            {"nama":"AMAL TASNIM BINTI ASUWAD","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"NUSAIBAH BINTI MUHAMMAD SHUFI","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"NURUL HUSNA BINTI MOHAMAD FUAD","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"NUHA IEMANI BINTI MOHD ZUBAIRI","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"NUR HAZWANI BINTI MUHAMMAD","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"NAWAL HUDA BINTI MOHD IZWAN","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"ALIA MAISARAH BINTI MOHAMMAD SHATTIRQ","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"NUR DAMIA FATINI BINTI AHMAD FAUZI","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"AFNAN HUDA BINTI DHIYAUDDIN","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"NIK HUSNA ALEESYA BINTI NOOR HASMANIZAM","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"SITI NUR AISHAH BINTI ABDUL LATIF","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"FARAH ADEEBA BINTI MOHAMAD APANDE","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"NUHA MARDHIAH BINTI MUHAMAD NASBIR","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"NUR ANIS BATRISYA BINTI MOHD KHAIRUL ANWAR","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"AIMI HUSNA BINTI AZIZI","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"AISYATUL HUMAIRA' BINTI SHARIZAN","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"AYATUL HUDA BINTI TAUFIK","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"AISYA NUR HUMAYRA BINTI MOHD RAIF","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"UMMUL NUR KHASIF BINTI MOHD YUSRI","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"NUR MARISSA INSYIRAH BINTI MAT BADERI","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"KU AISYAH HUMAIRA' BINTI KU MUNIR","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"AINA NABIHAH BINTI MOHD YAZID","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"NURUL AMALIA BINTI MOHD AZLAN","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"NUHA BINTI MOHD FATHULLAH","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"NUR SUFIYYA AMEENA BINTI SAIKHULZADAAINANI","jantina":"PEREMPUAN","tingkatan":"2"},
-            {"nama":"MUS'AB BIN MUSLIM","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MUHAMMAD AYSAR NAFIS BIN ABDUL RAZAK","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MUHAMMAD ANAS FIRDAUS BIN ABDUL MOKHTI","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"IHSAN ISKANDAR HAKIM BIN SUHAIMI","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"AKIF FAHIMI BIN ZULAZRI","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MOHAMAD HARITH NUKMAN BIN MOHAMAD NAZIR","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MUHAMMAD UMAR YAASIN BIN MOHAMAD ZAMRI","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"NIK AMEEN ZIQRI BIN SAKRI","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MUHAMMAD ARIF ILHAM BIN RIDZUAN","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MUNIF BIN AHMAD","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"AIMAN ZAFFRAN BIN AHMAD ZABIL ALBAR","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"AIMAN QAWARIEZMI BIN SHAJIHAN","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MUHAMMAD AL-FATEH BIN MOHD ASLAM","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"SYED HADIF WAFIY BIN SYED ABDUL RAHMAN","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MUHAMMAD AQIL HARRAZ BIN MOHD FUAD","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MUHAMMAD HADIF ARMAN BIN MUHAMMAD AL'HAPIS","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MUHAMMAD MUAZ BIN ZAINUDDIN","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MUHAMMAD NIYAZ BIN MOHD SOBRI","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"NUR MUHAMMAD IMAN BIN RUZAIMAN","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MUHAMMAD FAREEZ ZIKRY BIN MOHD FATHUL HAKIM","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MUHAMMAD IRFAN UWAIS BIN MOHD NAJIB","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MUHAMMAD FAHIM MIRZA BIN MOHD FEISAL","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"ABDUL MU'IZZ BIN MUHAMMAD ZAHIDI","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"MUHAMMAD AL-IDRISSI BIN MD SUPARDZI","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"ABDUL MUSTAQIM UZAIR BIN MOHAMED BAISAL","jantina":"LELAKI","tingkatan":"2"},
-            {"nama":"HUSNA IMANI BINTI SUHAIMI","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"WAN QISTINA HUMAIRA BINTI SAMAD","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"IFFATUL ULFA AS SOFYA BINTI MAHAMAD AFIF","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"ILHAN INSYIRAH BINTI AZLAN","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"NUR HAZIQAH FIKRIYYAH BINTI MUHAMAD HAZRIQ","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"IRDINA NUR ATHIRAH BINTI ROSLY","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"NURUL ALIAH MUNIRAH BINTI KAMARUDDIN","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"NUR ADNI HAZIRAH BINTI MOHD. YUHAIZAM","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"AUNI KHADIJAH BINTI MUHAMMAD 'ABID","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"NUR KHALILAH BINTI MOHD SHUFIQ","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"SULWANA RAIMI BINTI MOHD SUHAIL","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"AFRINA ZAHIRAH BINTI MOHD ZUHAIRI","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"QISTINA NURBATRISYIA BINTI AHMAD SAHBUDIN","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"NURISYA QISTINA BINTI MOHAMAD ZAHIR","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"NUR ADRIANA AFIFAH BINTI MOHD FADZIL","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"HUDA INSYIRAH BINTI AZIZAN","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"AISYAH HUURUN 'EIN BINTI YUHAFEZ","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"AUNI ALISHA BINTI MOHAMAD ROSZAIMI","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"NUR AMANI SABIHAH BINTI MOHD SAERAN","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"SITI NUHA NAJIHAH BINTI SH MOHD FIRDAUS","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"AISYAH AL HUMAIRAA BINTI MOHD NOOR RAHIMIN","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"NURUL NUHA BINTI NORMAN","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"WIDAD BINTI ROSNE","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"NUR AMALINA BINTI MUHAMAD RADZI","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"HANIE AZZAHRA BINTI HELMI AZUAN","jantina":"PEREMPUAN","tingkatan":"3"},
-            {"nama":"ABDULLAH FATEH BIN ADLI ALIMI","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"MUHAMMAD UZAIR BIN HANIF OMAR","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"MUHAMMAD QAYYIM BIN MOHAMAD AZAHAR","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"SYED HASIF QAYYUM BIN SYED ABDUL RAHMAN","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"MUHAMMAD MUJAHID IMRAN BIN MOHD AMIN","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"MUHAMMAD HAFIY BIN MUHAMMAD NOR","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"MUHAMMAD ZAWIR FIRAS BIN HASSAN","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"ABDULLAH NU'AIM SYAUQI BIN AHMAD RAMZI","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"AHMAD AMMAR BIN KHAIRUL FIKRI","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"AHMAD FARHAN HAKIMI BIN MOHD HAYAZI","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"MUHAMMAD NABHAN BIN ZA'IM","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"MUHAMMAD AQIL BIN RAZALI","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"EUSUFF BIN MOHD HANIFF","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"DANISH AFNAN BIN FAUZI","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"MUHAMMAD HAFIEY BIN SUHAIRI","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"MUHAMMAD 'AQEEF FAHRI BIN MAZWAN","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"MUHAMMAD SAQIF MUSYRIF BIN MOHAMAD HILMI","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"IRHAM FAKHREY BIN AHMAD FUAD","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"PUTRA AFIQ KHALISH BIN KHAIRUL ABIDIN","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"HANDZALAH BIN MOHAMAD EMRAN","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"MUHAMMAD ALIFF HAKIMI BIN MOHD AKRI","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"FAUZAN AZEEM BIN ZUKI","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"AMIR FURQAN BIN ABDUL RAHMAN","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"MOHD HABIB AJMAL BIN MOHD AZHAR","jantina":"LELAKI","tingkatan":"3"},
-            {"nama":"IMTYYAZ NUR EIMAN BINTI MUHAMMAD NAJIB","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"AMIRATUL MUJAHIDAH BINTI MUHAMMAD HAAFIZUDD","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"MADIHAH BINTI AHMAD","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"IMAN INSYIRAH BINTI MOHD UZAINI","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"SITI BALQIS BINTI MOHD SYAM SURI","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"SITI NOR UMI HUMAIRA BINTI ISMAIL","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"WARDATUL WADA'AH BINTI IZWAN","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"NAWAL IRDINA BINTI MOHD SHUHAIMI","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"IMAN NUR BATRISYIA BINTI AMRAN","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"AAFIA DELISHA BINTI MUHAMAD SAMSUL NIZAM","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"SYAIMA' RADHWA BINTI ABDUL MANAP","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"NURUL FARIHA BINTI ABDUL SHUKOR","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"NUR ALISHYA BINTI MOHD ANUAR","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"NUR AISHAH BINTI ADLI","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"NURIN IMTINAN BINTI MUHAMAD NASIR","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"ARISSA SAFIYA BINTI SUFFIAN HADI","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"NURIL INSYIRAH BINTI HYUSMEE","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"ALYA MAISARAH BINTI MOHAMAD FAIZAL","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"NADIA BINTI MUHAMMAD 'ASRI","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"NUR NAJLA NASUHA BINTI AHMAD TARMIZI","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"NURI NUHA BINTI HASROLNIZAM","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"NUR KHAULAH AL-AZWAR BINTI MUHAMMAD HEIRI","jantina":"PEREMPUAN","tingkatan":"4"},
-            {"nama":"AHMAD ASYRAF RIFAIE BIN MOHAMAD ZAKI","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"AMEER NASIH ULWAN BIN MOHD RUHAIFI","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"IKHWAN HADIF BIN MOHD IKHWAN","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"AHMAD HAMZAH BIN AHMAD NAJIB","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"IZZAT HAFIY BIN OTHMAN","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"MUHAMMAD FAHEEM BIN MOHD FIRDAUS","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"MUHAMMAD YAKSIBUL IMAN BIN YAACOB","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"MUHAMMAD AQIL DARWISY BIN MOHD FARID","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"MUHAMMAD IRFAN HADIF BIN MOHD FAIRUS IZHAR","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"MUHAMMAD NAUFAL MUNZIR BIN MD ZAMRI","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"MUHAMMAD ASHRAF BIN MOHD SHAHRUL","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"AHMAD ATIF BIN ZULKIFLI","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"ISMA AQEEL QUSHAYYI ISMASUHAIMI","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"ARIF ARMAN BIN KAMARULZAMAN","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"MUHAMMAD ADIB IMAN BIN MOHD SA'AD","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"MUHAMMAD NAUFAL AZIMI BIN MOHD AZLI","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"FAWWAZ AKRIMI BIN MOHAMMAT NAWAWI","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"AHMAD MUJAHID BIN MOHD ROHIMI","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"MUHAMMAD I'ZZAN HAREEZ BIN MUHAMMAD I'ZATH","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"AFHAM HARRAZ BIN MOHD NAZRI","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"MUHAMMAD ARIF AMSYAR BIN MD RAZAK","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"MUHAMMAD ADAM BIN MOHD FATHULLAH","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"MUHAMMAD NASRUN AMSYAR BIN ABDULLAH","jantina":"LELAKI","tingkatan":"4"},
-            {"nama":"IZZATUL 'ULYA AZ-ZAHRA' BINTI MAHAMAD AFIF","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"NUR ZAHIRAH BINTI MUHAMMAD NOR","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"NUR IRDINA BATRISYIA BINTI IRWAN","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"NUR DINI AMNI BINTI BAHARUDIN","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"NUR HAWA BINTI BASYARUDDIN","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"DURRATUL AFIQAH BINTI MUHAMMAD ZAINUDI","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"AIN NAJIHAH BINTI MOHD ROPAIN","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"NUR ATIQAH BT AHMAD NASIR","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"NURUL NUR HUDA BINTI MOHAMAD ZAID","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"NUHA NUSAIBAH BINTI AZROLHADI","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"AISYAH 'ULYA NAFISAH BINTI YUHAFEZ","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"DAMIA BINTI MUHAMAD IZANI","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"DURRATUL HANNAN BT MOHD MARZUKI","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"NAJATUL YUMNI BINTI MUHAMAD BASTAMI","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"HAIBATUNNISA' BINTI SOFIYUDIN","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"NUR ALIA NAFISAH BINTI MOHD ROSLI","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"ADELYA SYAZA HUSNA BINTI MOHD HASMADY","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"AUNI HUSNA BINTI MOHD SHUHAIMI","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"KHAIRUN NAJIHAH BINTI BAHARIN","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"NURUL NAJYA BINTI ASMADI","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"SYIBRATUL HUDA BINTI MUHD SYAHRIZAL","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"NUR HANNAN MARDHIYYAH BINTI AHMAD MARZUKI","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"NUR AI'SYA HUMAIRA BINTI MOHD YUSRI","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"NUR ZAHIRAH BINTI MOHD YUSOFF","jantina":"PEREMPUAN","tingkatan":"5"},
-            {"nama":"LUTFIL HADI BIN ZUKI","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD HAZIM BIN HANIF OMAR","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD HAZIM NADZMI BIN MOHD HANIF","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"AMMAR AS-SYATIR BIN ROZAINI","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD ZIYAAD BIN AZLAN","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"AZIM ZIKRI BIN MOHD SYARMINDRA RIZAL","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD HARITH HUSAINI BIN HAFIZUDDIN","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD AQIL WAZIF BIN SYAIFUL KHAZIMI","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD HAZIM BIN NORDIN","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"NAZEEM HASIF BIN ZAMREE","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"ABDULLAH MUBIN BIN NAZMI","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD ALIFF FARHAN BIN MOHAMAD FERIZA","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD ANIQ HAKIM BIN MOHD KHAIRUL AZMAN","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD SALAHUDDIN BIN ZAINAL ABIDIN","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD ISYRAF HAZIQ BIN MOHD ISA","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"ADIB SIDQI BIN HELMI SALAM","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD ADAM MUQRIZ BIN MOHD AZIZI","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD MUNIR BIN MOHD ASRI","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD SYAHMI BIN MOHAMAD SOBRI","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD AISAR WAJDI BIN MUHAMMAD ZAHID","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD ADAM PUTRA BIN MUHAMMAD NORMAN","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MUHAMMAD AQIL ZIKRY BIN ZAKARIA","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"AHMAD NAQIUDDIN BIN AHMAD RAIZAL","jantina":"LELAKI","tingkatan":"5"},
-            {"nama":"MOHAMAD DARWISH ZAKWAN BIN MOHD SADRI","jantina":"LELAKI","tingkatan":"5"}
-        ];
 
-        let allStudents = [];
+        let allStudentsData = [];
         let filteredStudents = [];
         let selectedStudent = null;
-        let selectedSeat = null;
         let bookings = {};
-        // Track bulk selections
         let selectedBulk = new Set();
         let pendingDeleteList = [];
+        let pendingJourneyEdit = null;
+        let isAdmin = false;
 
-        // Format name: Title Case (capitalize first letter of each word)
-        function formatName(name) {
-            if (!name) return '';
-            // Normalize spacing then capitalize each word and sub-word separated by hyphen or apostrophe
-            let result = name
-                .toLowerCase()
-                .trim()
-                .split(/\s+/)
-                .map(word => {
-                    // Handle hyphenated parts (e.g., 'al-fateh')
-                    return word.split('-').map(part => {
-                        if (!part) return part;
-                        // Preserve inner apostrophes but capitalize first char after them as part of the word
-                        return part.split("'").map(p => p ? p.charAt(0).toUpperCase() + p.slice(1) : p).join("'");
-                    }).join('-');
-                })
-                .join(' ');
-
-            // Force 'Bin' and 'Binti' to start with lowercase (word boundaries, case-insensitive)
-            result = result.replace(/\b(Bin|Binti)\b/gi, match => match.toLowerCase());
-
-            return result;
+        function showMessage(text, type='info'){
+            const el = document.getElementById('message'); el.textContent = text; el.className = 'alert alert-' + type; el.style.display='block'; setTimeout(()=>el.style.display='none',3000);
         }
 
-        // Load bookings from localStorage on page load
-        function loadBookings() {
-            const saved = localStorage.getItem('busBookings');
-            if (saved) {
-                bookings = JSON.parse(saved);
-            }
-        }
+        function formatName(name){ if(!name) return ''; let r = name.toLowerCase().trim().split(/\s+/).map(w=> w.split('-').map(p=> p ? p.split("'").map(s=> s? s.charAt(0).toUpperCase()+s.slice(1):s).join("'") : p).join('-')).join(' '); r=r.replace(/\b(Bin|Binti)\b/gi,m=>m.toLowerCase()); return r; }
 
-        // Save bookings to localStorage
-        function saveBookings() {
-            localStorage.setItem('busBookings', JSON.stringify(bookings));
-        }
+        function loadStudentsDataFromStorage(){ const s = localStorage.getItem('studentData'); if(s) { try{ allStudentsData = JSON.parse(s); return true; }catch(e){ console.error(e); } } return false; }
+        function saveStudentsDataToStorage(){ localStorage.setItem('studentData', JSON.stringify(allStudentsData)); }
+        async function loadStudentsData(){ if(loadStudentsDataFromStorage()) return; try{ const resp = await fetch('students_data.json'); if(!resp.ok) throw new Error('load failed'); allStudentsData = await resp.json(); saveStudentsDataToStorage(); }catch(e){ console.error(e); showMessage('Gagal muat data', 'danger'); } }
 
-        // Load journey header from localStorage
-        function loadJourneyHeader() {
-            const saved = localStorage.getItem('journeyHeader');
-            if (saved) {
-                const data = JSON.parse(saved);
-                const header = document.getElementById('journeyHeader');
-                header.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${data.text}<br><small class="text-muted">${data.date}</small>`;
-            }
-        }
+        function loadBookings(){ const s = localStorage.getItem('busBookings'); if(s) bookings = JSON.parse(s); }
+        function saveBookings(){ localStorage.setItem('busBookings', JSON.stringify(bookings)); }
+        function loadJourneyHeader(){ const s = localStorage.getItem('journeyHeader'); if(!s) return; const d=JSON.parse(s); const h=document.getElementById('journeyHeader'); h.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${d.text}<br><small class="text-muted">📅 ${d.date}</small>`; }
+        function saveJourneyHeader(text,date){ localStorage.setItem('journeyHeader', JSON.stringify({text,date})); const h=document.getElementById('journeyHeader'); if(h) h.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${text}<br><small class="text-muted">📅 ${date}</small>`; }
 
-        // Save journey header to localStorage
-        function saveJourneyHeader(text, date) {
-            localStorage.setItem('journeyHeader', JSON.stringify({text, date}));
-        }
+        function updateAdminUI(){ const status=document.getElementById('adminStatus'); const l=document.getElementById('adminLoginBtn'); const o=document.getElementById('adminLogoutBtn'); if(isAdmin){ status.textContent='Admin: Log Masuk'; status.className='badge bg-success me-2'; l.classList.add('d-none'); o.classList.remove('d-none'); } else { status.textContent='Admin: Tidak Log Masuk'; status.className='badge bg-secondary me-2'; l.classList.remove('d-none'); o.classList.add('d-none'); } }
 
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            loadBookings();
-            loadJourneyHeader();
-            updateSummary();
-        });
+        function openAdminLoginModal(){ document.getElementById('adminPassword').value=''; document.getElementById('adminModalTitle').textContent='Log Masuk Admin'; document.getElementById('adminModalBody').innerHTML = '<label class="form-label small">Kata Laluan Admin:</label><input id="adminPassword" class="form-control form-control-sm" type="password">'; document.getElementById('adminModalFooter').innerHTML = '<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary btn-sm" onclick="doAdminLogin()">Log Masuk</button>'; new bootstrap.Modal(document.getElementById('adminModal')).show(); }
+        function doAdminLogin(){ const p = document.getElementById('adminPassword').value; if(p!==ADMIN_PASSWORD){ showMessage('Kata laluan salah','danger'); return; } isAdmin=true; updateAdminUI(); bootstrap.Modal.getInstance(document.getElementById('adminModal')).hide(); showMessage('Berjaya log masuk','success'); }
+        function adminLogout(){ isAdmin=false; updateAdminUI(); showMessage('Admin log keluar','info'); }
 
-        // Update students by filter
-        function updateStudentsByFilter() {
-            const gender = document.getElementById('genderFilter').value;
-            const classLevel = document.getElementById('classFilter').value;
-            
-            if (!gender || !classLevel) {
-                filteredStudents = [];
-                updateStudentList();
-                return;
-            }
-            
-            filteredStudents = allStudentsData.filter(student => 
-                student.jantina === gender && student.tingkatan === classLevel
-            );
-            
-            filteredStudents.sort((a, b) => a.nama.localeCompare(b.nama));
-            updateStudentList();
-        }
+        function updateStudentsByFilter(){ const g=document.getElementById('genderFilter').value; const t=document.getElementById('classFilter').value; if(!g||!t){ filteredStudents=[]; updateStudentList(); return; } filteredStudents = allStudentsData.filter(s=>s.jantina===g && s.tingkatan===t); filteredStudents.sort((a,b)=>a.nama.localeCompare(b.nama)); updateStudentList(); }
 
-        // Reset filters
-        function resetFilters() {
-            document.getElementById('genderFilter').value = '';
-            document.getElementById('classFilter').value = '';
-            filteredStudents = [];
-            selectedStudent = null;
-            selectedSeat = null;
-            updateStudentList();
-            updateSummary();
-        }
+        function updateStudentList(){ const list=document.getElementById('studentList'); const g=document.getElementById('genderFilter').value; const t=document.getElementById('classFilter').value; if(!g||!t){ list.innerHTML='<div class="text-center text-muted py-4"><i class="fas fa-inbox"></i> Pilih jantina dan tingkatan</div>'; return; } if(filteredStudents.length===0){ list.innerHTML='<div class="text-center text-muted py-4"><i class="fas fa-inbox"></i> Tiada pelajar</div>'; return; } list.innerHTML=''; filteredStudents.forEach(s=>{ const item=document.createElement('div'); item.className='list-group-item d-flex align-items-center'; const r=document.createElement('input'); r.type='radio'; r.className='form-check-input me-2'; r.name='studentSelection'; r.value=s.nama; r.checked = s.nama===selectedStudent; const booked = !!bookings[s.nama]; r.disabled = booked; r.onchange = ()=>selectStudent(s.nama); const lbl=document.createElement('label'); lbl.className='mb-0 small form-check-label flex-grow-1'; lbl.textContent = formatName(s.nama); lbl.onclick = ()=>{ if(!r.disabled){ r.checked=true; selectStudent(s.nama);} }; item.appendChild(r); item.appendChild(lbl); if(booked){ const b=document.createElement('span'); b.className='badge bg-warning text-dark ms-2 small'; b.textContent='Sudah menempah'; item.appendChild(b);} list.appendChild(item); }); }
 
-        // Initialize bus layout
-        function initializeBus() {
-            // Bus layout removed
-        }
+        function selectStudent(name){ selectedStudent=name; const alert=document.getElementById('selectedStudentAlert'); const text=document.getElementById('selectedStudentText'); text.textContent=formatName(name); const btn=document.getElementById('confirmBtn'); if(bookings[name]){ alert.className='alert alert-warning small'; btn.disabled=true; } else { alert.className='alert alert-info small'; btn.disabled=false; } alert.classList.remove('d-none'); updateStudentList(); }
 
-        // Update student list display
-        function updateStudentList() {
-            const studentList = document.getElementById('studentList');
-            const gender = document.getElementById('genderFilter').value;
-            const classLevel = document.getElementById('classFilter').value;
-            
-            if (!gender || !classLevel) {
-                studentList.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-inbox"></i> Pilih jantina dan tingkatan untuk melihat senarai pelajar</div>';
-                return;
-            }
-            
-            if (filteredStudents.length === 0) {
-                studentList.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-inbox"></i> Tiada pelajar untuk pilihan ini</div>';
-                return;
-            }
-            
-            studentList.innerHTML = '';
-            filteredStudents.forEach(student => {
-                const item = document.createElement('div');
-                item.className = 'list-group-item d-flex align-items-center py-1';
-                item.style.cursor = 'pointer';
-                
-                const radio = document.createElement('input');
-                radio.type = 'radio';
-                radio.className = 'form-check-input me-2';
-                radio.name = 'studentSelection';
-                radio.value = student.nama;
-                radio.checked = student.nama === selectedStudent;
-                // Disable radio if already booked
-                const alreadyBooked = !!bookings[student.nama];
-                radio.disabled = alreadyBooked;
-                radio.onchange = () => selectStudent(student.nama);
-                
-                const label = document.createElement('label');
-                label.className = 'form-check-label flex-grow-1 mb-0 small';
-                label.style.cursor = 'pointer';
-                label.textContent = formatName(student.nama);
-                label.onclick = () => {
-                    if (radio.disabled) return; // prevent selecting already booked student
-                    radio.checked = true;
-                    selectStudent(student.nama);
-                };
+        function confirmBooking(){ if(!selectedStudent){ showMessage('Sila pilih pelajar','danger'); return; } if(bookings[selectedStudent]){ showMessage('Sudah menempah','warning'); return; } if(Object.keys(bookings).length>=TOTAL_CAPACITY){ showMessage('Kapasiti penuh','danger'); return; } bookings[selectedStudent]=true; saveBookings(); showMessage('Tempahan disahkan','success'); selectedStudent=null; updateStudentList(); updateBookedList(); }
 
-                item.appendChild(radio);
-                item.appendChild(label);
+        function updateBookedList(){ const el=document.getElementById('bookedList'); const names=Object.keys(bookings); if(names.length===0){ el.innerHTML='<div class="text-center text-muted py-4"><i class="fas fa-inbox"></i> Tiada tempahan</div>'; document.getElementById('bulkDeleteBtn').disabled=true; const footDownload = document.getElementById('footerDownloadBtn'); if(footDownload) footDownload.disabled = true; updateSelectAllCheckbox(); return; } el.innerHTML=''; const bus1=names.slice(0,BUS_CAPACITY); const bus2=names.slice(BUS_CAPACITY); if(bus1.length){ const h=document.createElement('div'); h.className='list-group-item bg-light'; h.textContent=`Bas 1 (${bus1.length}/${BUS_CAPACITY})`; el.appendChild(h); bus1.forEach((n,i)=>{ const it=document.createElement('div'); it.className='list-group-item d-flex align-items-center'; const cb=document.createElement('input'); cb.type='checkbox'; cb.className='form-check-input me-2'; cb.checked=selectedBulk.has(n); cb.onchange=()=>toggleBulkSelect(n,cb.checked); const span=document.createElement('span'); span.className='small text-primary'; span.textContent=`${i+1}. ${formatName(n)}`; it.appendChild(cb); it.appendChild(span); el.appendChild(it); }); }
+            if(bus2.length){ const h=document.createElement('div'); h.className='list-group-item bg-light mt-2'; h.textContent=`Bas 2 (${bus2.length}/${BUS_CAPACITY})`; el.appendChild(h); bus2.forEach((n,i)=>{ const it=document.createElement('div'); it.className='list-group-item d-flex align-items-center'; const cb=document.createElement('input'); cb.type='checkbox'; cb.className='form-check-input me-2'; cb.checked=selectedBulk.has(n); cb.onchange=()=>toggleBulkSelect(n,cb.checked); const span=document.createElement('span'); span.className='small text-primary'; span.textContent=`${i+1}. ${formatName(n)}`; it.appendChild(cb); it.appendChild(span); el.appendChild(it); }); }
+            // sync both top (hidden) and footer bulk delete buttons + footer download
+            const topBulk = document.getElementById('bulkDeleteBtn');
+            const footBulk = document.getElementById('footerBulkDeleteBtn');
+            const footDownload = document.getElementById('footerDownloadBtn');
+            if(topBulk) topBulk.disabled = selectedBulk.size===0;
+            if(footBulk) footBulk.disabled = selectedBulk.size===0;
+            if(footDownload) footDownload.disabled = names.length===0;
+            updateSelectAllCheckbox(); }
 
-                if (alreadyBooked) {
-                    const badge = document.createElement('span');
-                    badge.className = 'badge bg-warning text-dark ms-2 small';
-                    badge.textContent = 'Sudah menempah';
-                    item.appendChild(badge);
-                }
+        function toggleBulkSelect(name,checked){ if(checked) selectedBulk.add(name); else selectedBulk.delete(name); const topBulk = document.getElementById('bulkDeleteBtn'); const footBulk = document.getElementById('footerBulkDeleteBtn'); if(topBulk) topBulk.disabled = selectedBulk.size===0; if(footBulk) footBulk.disabled = selectedBulk.size===0; updateSelectAllCheckbox(); }
+        function toggleSelectAll(checked){ const names=Object.keys(bookings); if(checked) names.forEach(n=>selectedBulk.add(n)); else selectedBulk.clear(); updateBookedList(); const footBulk = document.getElementById('footerBulkDeleteBtn'); if(footBulk) footBulk.disabled = selectedBulk.size===0; }
+        function updateSelectAllCheckbox(){ const cb=document.getElementById('selectAllCheckbox'); if(!cb) return; const names=Object.keys(bookings); cb.checked = names.length>0 && selectedBulk.size===names.length; }
 
-                studentList.appendChild(item);
-            });
-        }
+        function downloadSenarai(){ const names=Object.keys(bookings); if(names.length===0){ showMessage('Tiada tempahan','warning'); return; } const header=document.getElementById('journeyHeader').innerText.trim(); let content='SENARAI TEMPAHAN\n\n'+header+'\n\n'; names.forEach((n,i)=> content+=`${i+1}. ${formatName(n)}\n`); const a=document.createElement('a'); a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(content); a.download='Senarai_Tempahan_Bas.txt'; document.body.appendChild(a); a.click(); a.remove(); showMessage('Dimuat turun','success'); }
 
-        // Select student
-        function selectStudent(name) {
-            selectedStudent = name;
-            selectedSeat = null;
-            updateStudentList();
-            updateSummary();
-            
-            // Show selected student alert
-            const alert = document.getElementById('selectedStudentAlert');
-            const alertText = document.getElementById('selectedStudentText');
-            alertText.textContent = formatName(name);
-            // If already booked, show warning and disable confirm
-            const confirmBtn = document.getElementById('confirmBtn');
-                if (bookings[name]) {
-                alert.classList.remove('d-none');
-                alert.classList.remove('alert-info');
-                alert.classList.add('alert-warning');
-                alertText.textContent = formatName(name) + ' - Sudah menempah';
-                if (confirmBtn) confirmBtn.disabled = true;
-                return;
-            }
-
-            // Not booked
-            alert.classList.remove('d-none');
-            alert.classList.remove('alert-warning');
-            alert.classList.add('alert-info');
-            alertText.textContent = formatName(name);
-            if (confirmBtn) confirmBtn.disabled = false;
-        }
-
-        // Select seat
-        function selectSeat(seatNumber, seatElement) {
-            // Seating removed
-        }
-
-        // Update seat selection visual
-        function updateSeatSelection() {
-            // Seating removed
-        }
-
-        // Confirm booking
-        function confirmBooking() {
-            if (!selectedStudent) {
-                showMessage('Sila pilih pelajar', 'danger');
-                return;
-            }
-            
-            // Check if already booked
-            if (bookings[selectedStudent]) {
-                showMessage(`${formatName(selectedStudent)} sudah menempah`, 'warning');
-                return;
-            }
-            
-            // Check capacity
-            if (Object.keys(bookings).length >= TOTAL_CAPACITY) {
-                showMessage(`Kapasiti penuh (${TOTAL_CAPACITY} pelajar). Tidak boleh menambah pelajar baru.`, 'danger');
-                return;
-            }
-            
-            bookings[selectedStudent] = true;
-            saveBookings();
-            updateSummary();
-            showMessage(`Tempahan disahkan untuk ${formatName(selectedStudent)}`, 'success');
-            resetBooking();
-        }
-
-        // Reset selection
-        function resetBooking() {
-            selectedStudent = null;
-            selectedSeat = null;
-            // Clear the alert
-            const alert = document.getElementById('selectedStudentAlert');
-            alert.classList.add('d-none');
-            updateStudentList();
-            updateSummary();
-            const confirmBtn = document.getElementById('confirmBtn');
-            if (confirmBtn) confirmBtn.disabled = false;
-        }
-
-        // Update summary display
-        function updateSummary() {
-            const selDisp = document.getElementById('selectedStudentDisplay');
-            if (selDisp) selDisp.textContent = selectedStudent ? formatName(selectedStudent) : 'Tiada';
-            updateBookedList();
-        }
-
-        // Update booked list display
-        function updateBookedList() {
-            const bookedList = document.getElementById('bookedList');
-            const bookedStudents = Object.keys(bookings);
-            // Remove any selectedBulk entries that are no longer booked
-            selectedBulk.forEach(name => {
-                if (!bookings[name]) selectedBulk.delete(name);
-            });
-            const bulkBtn = document.getElementById('bulkDeleteBtn');
-            if (bulkBtn) bulkBtn.disabled = selectedBulk.size === 0;
-            
-            if (bookedStudents.length === 0) {
-                bookedList.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-inbox"></i> Tiada tempahan</div>';
-                return;
-            }
-            
-            // Calculate bus assignments
-            const bus1 = [];
-            const bus2 = [];
-            
-            for (let i = 0; i < bookedStudents.length; i++) {
-                if (i < BUS_CAPACITY) {
-                    bus1.push(bookedStudents[i]);
-                } else {
-                    bus2.push(bookedStudents[i]);
-                }
-            }
-            
-            bookedList.innerHTML = '';
-            
-            // Display Bus 1
-                if (bus1.length > 0) {
-                const busHeader = document.createElement('div');
-                busHeader.className = 'list-group-item bg-light py-1';
-                busHeader.innerHTML = `<i class="fas fa-bus"></i> Bas 1 (${bus1.length}/${BUS_CAPACITY})`;
-                bookedList.appendChild(busHeader);
-                
-                bus1.forEach((name, index) => {
-                    const item = document.createElement('div');
-                    item.className = 'list-group-item d-flex justify-content-start align-items-center py-1';
-
-                    const chk = document.createElement('input');
-                    chk.type = 'checkbox';
-                    chk.className = 'form-check-input me-2';
-                    chk.checked = selectedBulk.has(name);
-                    chk.onchange = () => toggleBulkSelect(name, chk.checked);
-
-                    const student = allStudentsData.find(s => s.nama === name) || {};
-                    const ting = student.tingkatan ? ` (T${student.tingkatan})` : '';
-
-                    const span = document.createElement('span');
-                    span.className = 'text-primary small';
-                    span.textContent = `${index + 1}. ${formatName(name)}${ting}`;
-
-                    item.appendChild(chk);
-                    item.appendChild(span);
-                    bookedList.appendChild(item);
-                });
-            }
-            
-            // Display Bus 2
-            if (bus2.length > 0) {
-                const busHeader = document.createElement('div');
-                busHeader.className = 'list-group-item bg-light mt-3 py-1';
-                busHeader.innerHTML = `<i class="fas fa-bus"></i> Bas 2 (${bus2.length}/${BUS_CAPACITY})`;
-                bookedList.appendChild(busHeader);
-                
-                bus2.forEach((name, index) => {
-                    const item = document.createElement('div');
-                    item.className = 'list-group-item d-flex justify-content-start align-items-center py-1';
-
-                    const chk = document.createElement('input');
-                    chk.type = 'checkbox';
-                    chk.className = 'form-check-input me-2';
-                    chk.checked = selectedBulk.has(name);
-                    chk.onchange = () => toggleBulkSelect(name, chk.checked);
-
-                    const student = allStudentsData.find(s => s.nama === name) || {};
-                    const ting = student.tingkatan ? ` (T${student.tingkatan})` : '';
-
-                    const span = document.createElement('span');
-                    span.className = 'text-primary small';
-                    span.textContent = `${index + 1}. ${formatName(name)}${ting}`;
-
-                    item.appendChild(chk);
-                    item.appendChild(span);
-                    bookedList.appendChild(item);
-                });
-            }
-        }
-        
-        updateSelectAllCheckbox();
-
-        // Toggle bulk selection for a student name
-        function toggleBulkSelect(name, checked) {
-            if (checked) selectedBulk.add(name);
-            else selectedBulk.delete(name);
-            const bulkBtn = document.getElementById('bulkDeleteBtn');
-            if (bulkBtn) bulkBtn.disabled = selectedBulk.size === 0;
-            updateSelectAllCheckbox();
-        }
-
-        // Toggle select all
-        function toggleSelectAll(checked) {
-            const bookedStudents = Object.keys(bookings);
-            if (checked) {
-                bookedStudents.forEach(name => selectedBulk.add(name));
-            } else {
-                selectedBulk.clear();
-            }
-            const bulkBtn = document.getElementById('bulkDeleteBtn');
-            if (bulkBtn) bulkBtn.disabled = selectedBulk.size === 0;
-            updateBookedList();
-        }
-
-        // Update select all checkbox state
-        function updateSelectAllCheckbox() {
-            const checkbox = document.getElementById('selectAllCheckbox');
-            if (!checkbox) return;
-            const bookedStudents = Object.keys(bookings);
-            checkbox.checked = bookedStudents.length > 0 && selectedBulk.size === bookedStudents.length;
-        }
-
-        // Download senarai tempahan as text file
-        function downloadSenarai() {
-            const bookedStudents = Object.keys(bookings);
-            if (bookedStudents.length === 0) {
-                showMessage('Tiada tempahan untuk dimuat turun', 'warning');
-                return;
-            }
-
-            const bus1 = [];
-            const bus2 = [];
-            
-            for (let i = 0; i < bookedStudents.length; i++) {
-                if (i < BUS_CAPACITY) {
-                    bus1.push(bookedStudents[i]);
-                } else {
-                    bus2.push(bookedStudents[i]);
-                }
-            }
-
-            // Extract journey header info
-            const header = document.getElementById('journeyHeader');
-            const headerText = header.textContent.trim();
-            const lines = headerText.split('\n');
-            const journeyText = lines[0].trim();
-            const journeyDate = lines[1] ? lines[1].trim() : '';
-
-            let content = 'SENARAI TEMPAHAN BAS PULANG BERMALAM\n';
-            content += '=====================================\n\n';
-            
-            // Add journey info
-            content += `${journeyText}\n`;
-            content += `Tarikh: ${journeyDate}\n\n`;
-
-            // Bus 1
-            if (bus1.length > 0) {
-                content += `BAS 1 (${bus1.length}/${BUS_CAPACITY})\n`;
-                content += '-------------------------------------\n';
-                bus1.forEach((name, index) => {
-                    const student = allStudentsData.find(s => s.nama === name) || {};
-                    const ting = student.tingkatan ? `(T${student.tingkatan})` : '';
-                    content += `${index + 1}. ${formatName(name)} ${ting}\n`;
-                });
-                content += '\n';
-            }
-
-            // Bus 2
-            if (bus2.length > 0) {
-                content += `BAS 2 (${bus2.length}/${BUS_CAPACITY})\n`;
-                content += '-------------------------------------\n';
-                bus2.forEach((name, index) => {
-                    const student = allStudentsData.find(s => s.nama === name) || {};
-                    const ting = student.tingkatan ? `(T${student.tingkatan})` : '';
-                    content += `${index + 1}. ${formatName(name)} ${ting}\n`;
-                });
-                content += '\n';
-            }
-
-            content += `\nJumlah Total: ${bookedStudents.length} pelajar\n`;
-
-            // Create and download file
-            const element = document.createElement('a');
-            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
-            element.setAttribute('download', 'Senarai_Tempahan_Bas.txt');
-            element.style.display = 'none';
-            document.body.appendChild(element);
-            element.click();
-            document.body.removeChild(element);
-            
-            showMessage('Senarai telah dimuat turun', 'success');
-        }
-
-        // Open admin modal for bulk delete
-        function openAdminModalForBulkDelete() {
+        function openAdminModalForBulkDelete(){
             if (selectedBulk.size === 0) return;
             pendingDeleteList = Array.from(selectedBulk);
+            // If admin already logged in, skip password modal and perform deletion after confirmation
+            if (isAdmin) {
+                const cnt = pendingDeleteList.length;
+                if (!confirm(`Padam ${cnt} tempahan terpilih?`)) return;
+                deleteAfterAuth();
+                return;
+            }
             document.getElementById('adminPassword').value = '';
-            const modal = new bootstrap.Modal(document.getElementById('adminModal'));
-            modal.show();
+            new bootstrap.Modal(document.getElementById('adminModal')).show();
+        }
+        function deleteAfterAuth(){ if(!isAdmin){ const p=document.getElementById('adminPassword').value; if(p!==ADMIN_PASSWORD){ showMessage('Kata laluan salah','danger'); return; } } if(pendingDeleteList.length>0){ let c=0; pendingDeleteList.forEach(n=>{ if(bookings[n]){ delete bookings[n]; c++; } }); saveBookings(); selectedBulk.clear(); pendingDeleteList=[]; updateBookedList(); showMessage(`${c} tempahan dipadam`,'success'); bootstrap.Modal.getInstance(document.getElementById('adminModal')).hide(); return; } showMessage('Tiada yang dipadam','info'); }
+
+        function openAdminModalForEdit(){
+            // populate modal inputs from saved journeyHeader if present
+            const stored = localStorage.getItem('journeyHeader');
+            let text = '';
+            let date = '';
+            if(stored){ try{ const d = JSON.parse(stored); text = d.text||''; date = d.date||''; }catch(e){}
+            }
+            document.getElementById('editJourneyText').value = text;
+            document.getElementById('editJourneyDate').value = date;
+            new bootstrap.Modal(document.getElementById('editJourneyModal')).show();
         }
 
-        // Remove booking
-        function removeBooking(name) {
-            pendingDeleteName = name;
+        function openAdminModalForEditConfirm(){
+            const text = document.getElementById('editJourneyText').value.trim();
+            const date = document.getElementById('editJourneyDate').value.trim();
+            if(!text){ showMessage('Sila masukkan keterangan perjalanan','danger'); return; }
+            // If admin logged in, save directly
+            if(isAdmin){ saveJourneyHeader(text,date); bootstrap.Modal.getInstance(document.getElementById('editJourneyModal')).hide(); showMessage('Perjalanan dikemaskini','success'); return; }
+            // require admin auth: store pending and show admin modal
+            pendingJourneyEdit = { text, date };
+            // hide edit modal while asking for admin password
+            const editModalEl = document.getElementById('editJourneyModal');
+            const editModalInst = bootstrap.Modal.getInstance(editModalEl);
+            if(editModalInst) editModalInst.hide();
             document.getElementById('adminPassword').value = '';
-            const modal = new bootstrap.Modal(document.getElementById('adminModal'));
-            modal.show();
+            document.getElementById('adminModalTitle').textContent = 'Pengesahan untuk Kemaskini';
+            document.getElementById('adminModalBody').innerHTML = '<label class="form-label small">Kata Laluan Admin:</label><input id="adminPassword" class="form-control form-control-sm" type="password">';
+            document.getElementById('adminModalFooter').innerHTML = '<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary btn-sm" onclick="saveJourneyEditAfterAuth()">Sahkan & Simpan</button>';
+            new bootstrap.Modal(document.getElementById('adminModal')).show();
         }
 
-        // Delete after admin authentication
-        function deleteAfterAuth() {
-            const password = document.getElementById('adminPassword').value;
-            
-            if (password !== ADMIN_PASSWORD) {
-                showMessage('Kata laluan admin salah', 'danger');
-                return;
-            }
-            
-            if (pendingDeleteList && pendingDeleteList.length > 0) {
-                let count = 0;
-                pendingDeleteList.forEach(name => {
-                    if (bookings[name]) {
-                        delete bookings[name];
-                        count++;
-                    }
-                });
-                saveBookings();
-                selectedBulk.clear();
-                pendingDeleteList = [];
-                updateSummary();
-                showMessage(`${count} tempahan telah dipadamkan`, 'success');
-                // Close modal
-                bootstrap.Modal.getInstance(document.getElementById('adminModal')).hide();
-                return;
-            }
-
-            if (pendingDeleteName) {
-                delete bookings[pendingDeleteName];
-                saveBookings();
-                updateSummary();
-                showMessage(`Tempahan untuk ${formatName(pendingDeleteName)} telah dipadamkan`, 'success');
-                pendingDeleteName = null;
-                
-                // Close modal
-                bootstrap.Modal.getInstance(document.getElementById('adminModal')).hide();
-            }
+        function saveJourneyEditAfterAuth(){
+            if(!isAdmin){ const p = document.getElementById('adminPassword').value; if(p!==ADMIN_PASSWORD){ showMessage('Kata laluan salah','danger'); return; } isAdmin = true; updateAdminUI(); }
+            if(pendingJourneyEdit){ saveJourneyHeader(pendingJourneyEdit.text,pendingJourneyEdit.date); pendingJourneyEdit = null; saveBookings(); bootstrap.Modal.getInstance(document.getElementById('adminModal')).hide(); bootstrap.Modal.getInstance(document.getElementById('editJourneyModal')).hide(); showMessage('Perjalanan dikemaskini','success'); }
         }
 
-        // Show message
-        function showMessage(text, type) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.textContent = text;
-            messageDiv.className = `alert alert-${type} mb-4`;
-            messageDiv.style.display = 'block';
-            
-            setTimeout(() => {
-                messageDiv.style.display = 'none';
-            }, 3000);
+        function openAdminImportModal(){
+            document.getElementById('adminImportPassword').value = '';
+            document.getElementById('csvImportFile').value = '';
+            document.getElementById('importPreviewSection').style.display = 'none';
+            document.getElementById('confirmImportBtn').disabled = true;
+            const pwContainer = document.getElementById('adminImportPasswordContainer');
+            const loggedNote = document.getElementById('adminImportLoggedInNotice');
+            if(isAdmin){
+                if(pwContainer) pwContainer.style.display = 'none';
+                if(loggedNote) loggedNote.style.display = 'block';
+            } else {
+                if(pwContainer) pwContainer.style.display = 'block';
+                if(loggedNote) loggedNote.style.display = 'none';
+            }
+            new bootstrap.Modal(document.getElementById('adminImportModal')).show();
         }
+        function previewImportCSV(){ const f=document.getElementById('csvImportFile').files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ const csv=e.target.result; const lines=csv.split(/\r?\n/).filter(Boolean); if(lines.length<2){ document.getElementById('importMessage').textContent='CSV tidak sah'; document.getElementById('importMessage').className='alert alert-danger'; document.getElementById('importMessage').style.display='block'; return; } const headers=lines[0].split(',').map(h=>h.trim().toUpperCase()); const rows=[]; for(let i=1;i<lines.length;i++){ const vals=lines[i].split(','); const obj={}; headers.forEach((h,idx)=> obj[h]= (vals[idx]||'').trim()); rows.push(obj); } // preview
+            const head=document.getElementById('importPreviewHead'); const body=document.getElementById('importPreviewBody'); head.innerHTML=''; body.innerHTML=''; const tr=document.createElement('tr'); headers.forEach(h=>{ const th=document.createElement('th'); th.textContent=h; tr.appendChild(th); }); head.appendChild(tr); rows.slice(0,5).forEach(rw=>{ const tr2=document.createElement('tr'); headers.forEach(h=>{ const td=document.createElement('td'); td.textContent = rw[h]||''; tr2.appendChild(td); }); body.appendChild(tr2); }); document.getElementById('importRowCount').textContent=`Jumlah baris: ${rows.length}`; document.getElementById('importPreviewSection').style.display='block'; document.getElementById('confirmImportBtn').disabled=false; document.getElementById('importMessage').style.display='none'; }; r.readAsText(f,'utf-8'); }
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            updateSummary();
-            
-            // Add click handler for journey header edit
-            const journeyHeader = document.getElementById('journeyHeader');
-            if (journeyHeader) {
-                journeyHeader.addEventListener('click', () => {
-                    openAdminModalForEdit();
-                });
-            }
-        });
+        function confirmImportStudents(){ if(!isAdmin){ const p=document.getElementById('adminImportPassword').value; if(p!==ADMIN_PASSWORD){ document.getElementById('importMessage').textContent='Kata laluan salah'; document.getElementById('importMessage').className='alert alert-danger'; document.getElementById('importMessage').style.display='block'; return; } } const f=document.getElementById('csvImportFile').files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ const csv=e.target.result; const lines=csv.split(/\r?\n/).filter(Boolean); const headers=lines[0].split(',').map(h=>h.trim().toUpperCase()); const rows=[]; for(let i=1;i<lines.length;i++){ const vals=lines[i].split(','); const obj={}; headers.forEach((h,idx)=> obj[h]= (vals[idx]||'').trim()); rows.push(obj); } allStudentsData = rows.map(row=>({ nama: row['NAMA']||'', jantina: row['JANTINA']||'', tingkatan: row['TINGKATAN']||'' })); saveStudentsDataToStorage(); bookings={}; saveBookings(); selectedBulk.clear(); updateStudentsByFilter(); updateBookedList(); bootstrap.Modal.getInstance(document.getElementById('adminImportModal')).hide(); showMessage(`Diimport ${allStudentsData.length} pelajar`,'success'); }; r.readAsText(f,'utf-8'); }
 
-        // Open admin modal for editing journey header
-        function openAdminModalForEdit() {
-            document.getElementById('adminPassword').value = '';
-            document.getElementById('adminModalTitle').textContent = 'Edit Perjalanan';
-            document.getElementById('adminModalBody').innerHTML = `
-                <label class="form-label small">Kata Laluan Admin:</label>
-                <input type="password" id="adminPassword" class="form-control form-control-sm mb-3" placeholder="Masukkan kata laluan">
-                <label class="form-label small">Teks Perjalanan:</label>
-                <input type="text" id="journeyText" class="form-control form-control-sm mb-2" placeholder="Cth: Perjalanan dari MTSD ke Alor Setar">
-                <label class="form-label small">Tarikh:</label>
-                <input type="text" id="journeyDate" class="form-control form-control-sm" placeholder="Cth: 20 November 2024">
-            `;
-            document.getElementById('adminModalFooter').innerHTML = `
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary btn-sm" onclick="saveJourneyEdit()">Simpan</button>
-            `;
-            
-            // Pre-fill with current values
-            const header = document.getElementById('journeyHeader');
-            const textMatch = header.textContent.match(/(.+?)\s*(\d+ \w+ \d+)$/);
-            if (textMatch) {
-                document.getElementById('journeyText').value = textMatch[1].trim();
-                document.getElementById('journeyDate').value = textMatch[2];
-            }
-            
-            const modal = new bootstrap.Modal(document.getElementById('adminModal'));
-            modal.show();
-        }
-
-        // Save journey header edit
-        function saveJourneyEdit() {
-            const password = document.getElementById('adminPassword').value;
-            
-            if (password !== ADMIN_PASSWORD) {
-                showMessage('Kata laluan admin salah', 'danger');
-                return;
-            }
-            
-            const journeyText = document.getElementById('journeyText').value.trim();
-            const journeyDate = document.getElementById('journeyDate').value.trim();
-            
-            if (!journeyText || !journeyDate) {
-                showMessage('Sila isi semua medan', 'warning');
-                return;
-            }
-            
-            const header = document.getElementById('journeyHeader');
-            header.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${journeyText}<br><small class="text-muted">${journeyDate}</small>`;
-            
-            saveJourneyHeader(journeyText, journeyDate);
-            showMessage('Perjalanan telah dikemas kini', 'success');
-            bootstrap.Modal.getInstance(document.getElementById('adminModal')).hide();
-        }
+        document.addEventListener('DOMContentLoaded', async ()=>{ loadBookings(); loadJourneyHeader(); await loadStudentsData(); updateAdminUI(); updateStudentList(); updateBookedList(); });
     </script>
 </body>
 </html>
