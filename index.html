@@ -18,7 +18,7 @@
 
             <h5 class="text-muted mb-3 text-center" id="journeyHeader" style="cursor: pointer;" title="Klik untuk edit">
                 <i class="fas fa-map-marker-alt"></i> Perjalanan dari MTSD ke Alor Setar
-                <br><small class="text-muted">20 November 2024</small>
+                <br><small class="text-muted">Khamis, 20 Nov 2025</small>
             </h5>
 
             <h5 class="card-title mb-2">
@@ -71,9 +71,14 @@
                     <input type="checkbox" id="selectAllCheckbox" class="form-check-input" onchange="toggleSelectAll(this.checked)">
                     <label class="form-check-label small ms-2" for="selectAllCheckbox">Pilih Semua</label>
                 </div>
-                <button id="bulkDeleteBtn" class="btn btn-danger btn-sm" onclick="openAdminModalForBulkDelete()" disabled title="Padam Terpilih" aria-label="Padam Terpilih">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <div class="d-flex gap-2">
+                    <button id="downloadBtn" class="btn btn-info btn-sm" onclick="downloadSenarai()" title="Muat Turun Senarai">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button id="bulkDeleteBtn" class="btn btn-danger btn-sm" onclick="openAdminModalForBulkDelete()" disabled title="Padam Terpilih" aria-label="Padam Terpilih">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
 
             <div id="bookedList" class="list-group">
@@ -110,7 +115,7 @@
         const BUS_CAPACITY = 44;
         const MAX_BUSES = 2;
         const TOTAL_CAPACITY = BUS_CAPACITY * MAX_BUSES;
-        const ADMIN_PASSWORD = 'admin@786!';
+        const ADMIN_PASSWORD = 'power@123!';
         let pendingDeleteName = null;
         const allStudentsData = [
             {"nama":"SAFIYYAH BINTI IBRAHIM","jantina":"PEREMPUAN","tingkatan":"1"},
@@ -716,6 +721,77 @@
             if (!checkbox) return;
             const bookedStudents = Object.keys(bookings);
             checkbox.checked = bookedStudents.length > 0 && selectedBulk.size === bookedStudents.length;
+        }
+
+        // Download senarai tempahan as text file
+        function downloadSenarai() {
+            const bookedStudents = Object.keys(bookings);
+            if (bookedStudents.length === 0) {
+                showMessage('Tiada tempahan untuk dimuat turun', 'warning');
+                return;
+            }
+
+            const bus1 = [];
+            const bus2 = [];
+            
+            for (let i = 0; i < bookedStudents.length; i++) {
+                if (i < BUS_CAPACITY) {
+                    bus1.push(bookedStudents[i]);
+                } else {
+                    bus2.push(bookedStudents[i]);
+                }
+            }
+
+            // Extract journey header info
+            const header = document.getElementById('journeyHeader');
+            const headerText = header.textContent.trim();
+            const lines = headerText.split('\n');
+            const journeyText = lines[0].trim();
+            const journeyDate = lines[1] ? lines[1].trim() : '';
+
+            let content = 'SENARAI TEMPAHAN BAS PULANG BERMALAM\n';
+            content += '=====================================\n\n';
+            
+            // Add journey info
+            content += `${journeyText}\n`;
+            content += `Tarikh: ${journeyDate}\n\n`;
+
+            // Bus 1
+            if (bus1.length > 0) {
+                content += `BAS 1 (${bus1.length}/${BUS_CAPACITY})\n`;
+                content += '-------------------------------------\n';
+                bus1.forEach((name, index) => {
+                    const student = allStudentsData.find(s => s.nama === name) || {};
+                    const ting = student.tingkatan ? `(T${student.tingkatan})` : '';
+                    content += `${index + 1}. ${formatName(name)} ${ting}\n`;
+                });
+                content += '\n';
+            }
+
+            // Bus 2
+            if (bus2.length > 0) {
+                content += `BAS 2 (${bus2.length}/${BUS_CAPACITY})\n`;
+                content += '-------------------------------------\n';
+                bus2.forEach((name, index) => {
+                    const student = allStudentsData.find(s => s.nama === name) || {};
+                    const ting = student.tingkatan ? `(T${student.tingkatan})` : '';
+                    content += `${index + 1}. ${formatName(name)} ${ting}\n`;
+                });
+                content += '\n';
+            }
+
+            content += `\nJumlah Total: ${bookedStudents.length} pelajar\n`;
+
+            // Create and download file
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+            element.setAttribute('download', 'Senarai_Tempahan_Bas.txt');
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+            
+            showMessage('Senarai telah dimuat turun', 'success');
         }
 
         // Open admin modal for bulk delete
