@@ -38,6 +38,12 @@
                 <button id="footerImportHeaderBtn" class="btn btn-sm p-1" title="Import CSV (Admin)" onclick="openAdminImportModal()" style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
                     <i class="fas fa-file-upload"></i>
                 </button>
+                <button id="footerExportJsonHeaderBtn" class="btn btn-sm p-1" title="Eksport DB (JSON)" onclick="exportBookingsToFile()" style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fas fa-file-download"></i>
+                </button>
+                <button id="footerImportJsonHeaderBtn" class="btn btn-sm p-1" title="Import DB (JSON)" onclick="openAdminDBModal()" style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fas fa-file-import"></i>
+                </button>
                 <button id="resetAllHeaderBtn" class="btn btn-sm p-1" title="Reset Semua" onclick="resetAllWithConfirm()" style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
                     <i class="fas fa-sync-alt"></i>
                 </button>
@@ -115,6 +121,19 @@
 
             <div class="modal fade" id="adminSettingsModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Tetapan Aplikasi</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><label class="form-label small">Jumlah Bas</label><input id="settingsBusCount" type="number" min="1" max="10" class="form-control form-control-sm mb-2"><div class="form-check form-switch mb-2"><input id="settingsSegregation" class="form-check-input" type="checkbox"><label class="form-check-label">Aktifkan Segregasi Jantina</label></div><small class="text-muted">Ubah jumlah bas akan mengubah kapasiti total (Kapasiti setiap bas: 44).</small></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary btn-sm" onclick="saveAdminSettings()">Simpan</button></div></div></div></div>
 
+            <div class="modal fade" id="adminDBModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Import / Eksport DB (JSON)</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><label class="form-label small">Pilih Fail JSON yang mengandungi objek tempahan</label><input id="dbImportFile" class="form-control form-control-sm mb-2" type="file" accept=".json" onchange="previewImportBookings()">
+                <div class="mb-2">
+                    <label class="form-label small">Mod Import</label>
+                    <div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="importMode" id="importModeOverwrite" value="overwrite" checked><label class="form-check-label small" for="importModeOverwrite">Gantikan semua (Overwrite)</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="importMode" id="importModeMerge" value="merge"><label class="form-check-label small" for="importModeMerge">Gabungkan (tambah entri baru; jangan buang yang sedia ada)</label></div>
+                    </div>
+                </div>
+                <div class="form-check mb-2"><input id="dbAutoBackup" class="form-check-input" type="checkbox" checked><label class="form-check-label small">Buat salinan sandaran (auto-download) sebelum import</label></div>
+                <div id="dbImportPreview" style="display:none"><h6 class="small">Pratonton</h6><pre id="dbImportPreviewText" class="small p-2" style="background:#f8f9fa;max-height:200px;overflow:auto"></pre><div id="dbImportPreviewCount" class="small text-muted"></div><div id="dbImportPreviewSummary" class="small text-muted mt-1"></div>
+                    <div id="dbConflictList" class="mt-2" style="display:block"></div>
+                </div></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button id="dbUndoImportBtn" class="btn btn-warning btn-sm" onclick="undoLastImport()" disabled>Undo Import</button><button id="dbImportConfirmBtn" class="btn btn-danger btn-sm" onclick="confirmImportBookings()" disabled>Import</button></div></div></div></div>
+
             
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -131,6 +150,44 @@
         const _chunk3 = '!321';  // scrambled for '123!'
         const SECRET_PASS = reverseString(_chunk1) + reverseString(_chunk2) + reverseString(_chunk3);
 
+        // Helper: produce a compact timestamp string used in filenames
+        function getTimestamp(){
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const MM = String(now.getMonth() + 1).padStart(2,'0');
+            const dd = String(now.getDate()).padStart(2,'0');
+            const HH = String(now.getHours()).padStart(2,'0');
+            const mm = String(now.getMinutes()).padStart(2,'0');
+            const ss = String(now.getSeconds()).padStart(2,'0');
+            return `${yyyy}${MM}${dd}_${HH}${mm}${ss}`;
+        }
+
+        // Helper: assign booked names into bus groups according to settings.
+        // Returns an object { bus1final, bus2final }
+        function assignBuses(names){
+            let bus1final = [];
+            let bus2final = [];
+            if(busSegregationEnabled){
+                const lelaki = names.filter(n => { const student = allStudentsData.find(s => s.nama === n); return student?.jantina === 'LELAKI'; });
+                const perempuan = names.filter(n => { const student = allStudentsData.find(s => s.nama === n); return student?.jantina === 'PEREMPUAN'; });
+
+                const bus1 = lelaki.slice(0, BUS_CAPACITY);
+                const lelakiremainder = lelaki.slice(BUS_CAPACITY);
+
+                let bus2 = perempuan.slice(0, BUS_CAPACITY - lelakiremainder.length);
+                bus2 = bus2.concat(lelakiremainder.slice(0, BUS_CAPACITY - bus2.length));
+
+                const perempuanoverflow = perempuan.slice(BUS_CAPACITY - lelakiremainder.length);
+                const bus1overflow = perempuanoverflow.slice(0, BUS_CAPACITY - bus1.length);
+                bus1final = bus1.concat(bus1overflow);
+                bus2final = bus2;
+            } else {
+                bus1final = names.slice(0, BUS_CAPACITY);
+                bus2final = names.slice(BUS_CAPACITY, BUS_CAPACITY * busCount);
+            }
+            return { bus1final, bus2final };
+        }
+
         let allStudentsData = [];
         let filteredStudents = [];
         let selectedStudent = null;
@@ -140,102 +197,18 @@
         let pendingJourneyEdit = null;
         let isAdmin = false;
         let pendingSettingsOpen = false;
+        let pendingDBImportOpen = false;
+        let parsedImportBookings = null;
+        // Keep last import backup in-memory for quick undo; also persisted to localStorage key
+        let lastImportBackup = null;
+        // IndexedDB available flag and db handle
+        let idbAvailable = false;
+        let idbHandle = null;
+        // Conflict review state
+        let importConflictKeys = [];
+        let importNewKeys = [];
         // Bus segregation setting (persisted)
         let busSegregationEnabled = true;
-
-        function loadSettings(){
-            const s = localStorage.getItem('busSegregationEnabled');
-            // default segregation disabled
-            busSegregationEnabled = s === null ? false : (s === 'true');
-            const bc = localStorage.getItem('busCount');
-            busCount = bc ? parseInt(bc,10) || 2 : 2;
-        }
-
-        function saveSettings(){
-            localStorage.setItem('busSegregationEnabled', busSegregationEnabled);
-            localStorage.setItem('busCount', String(busCount));
-            // if only 1 bus, ensure settings checkbox in modal is disabled when open
-            const elSeg = document.getElementById('settingsSegregation');
-            if(elSeg) elSeg.disabled = (busCount === 1);
-        }
-
-        
-
-        function openAdminSettingsModal(){
-            if(!isAdmin){ pendingSettingsOpen = true; openAdminLoginModal(); return; }
-            const elCount = document.getElementById('settingsBusCount');
-            const elSeg = document.getElementById('settingsSegregation');
-            if(elCount) elCount.value = busCount;
-            if(elSeg) elSeg.checked = busSegregationEnabled;
-            // if only 1 bus, disable segregation checkbox
-            if(elSeg) elSeg.disabled = (busCount === 1);
-            new bootstrap.Modal(document.getElementById('adminSettingsModal')).show();
-        }
-
-        function saveAdminSettings(){
-            if(!isAdmin){ showMessage('Perlu log masuk sebagai admin','danger'); return; }
-            const elCount = document.getElementById('settingsBusCount');
-            const elSeg = document.getElementById('settingsSegregation');
-            const val = parseInt(elCount.value,10);
-            if(isNaN(val) || val < 1){ showMessage('Sila masukkan bilangan bas yang sah','danger'); return; }
-            const newBusCount = Math.min(10, val);
-            const currentBookings = Object.keys(bookings).length;
-            const newTotal = BUS_CAPACITY * newBusCount;
-            if(currentBookings > newTotal){
-                const overflow = currentBookings - newTotal;
-                if(!confirm(`Mengurangkan jumlah bas kepada ${newBusCount} akan menyebabkan ${overflow} tempahan melebihi kapasiti (${newTotal}). Teruskan?`)){
-                    return;
-                }
-            }
-            busCount = newBusCount;
-            // if only 1 bus, force segregation off
-            if(busCount === 1){
-                busSegregationEnabled = false;
-            } else {
-                busSegregationEnabled = !!elSeg.checked;
-            }
-            saveSettings();
-            updateBookedList();
-            // hide settings modal robustly (create instance if needed)
-            const settingsEl = document.getElementById('adminSettingsModal');
-            const settingsInst = bootstrap.Modal.getInstance(settingsEl) || bootstrap.Modal.getOrCreateInstance(settingsEl);
-            if(settingsInst) settingsInst.hide();
-            showMessage('Tetapan disimpan','success');
-        }
-
-        function showMessage(text, type='info'){
-            const el = document.getElementById('message'); el.textContent = text; el.className = 'alert alert-' + type; el.style.display='block'; setTimeout(()=>el.style.display='none',3000);
-        }
-
-        function formatName(name){ 
-            if(!name) return ''; 
-            let r = name.toLowerCase().trim().split(/\s+/).map(w=> {
-                return w.split('-').map(p=> {
-                    if(!p) return p;
-                    return p.split("'").map((s,idx)=> {
-                        if(!s) return s;
-                        // If this is the first segment (before apostrophe) -> Title case
-                        // If the original chunk starts with an apostrophe (p[0] === "'") then
-                        // the segment after that leading apostrophe should be Title case too (e.g. "'Aqeef")
-                        if(idx === 0) return s.charAt(0).toUpperCase() + s.slice(1);
-                        if(p.charAt(0) === "'") return s.charAt(0).toUpperCase() + s.slice(1);
-                        // otherwise (apostrophe in middle) keep lowercase segment (e.g. Mus'ab)
-                        return s;
-                    }).join("'");
-                }).join('-');
-            }).join(' '); 
-            r=r.replace(/\b(Bin|Binti)\b/gi,m=>m.toLowerCase()); 
-            return r; 
-        }
-
-        function loadStudentsDataFromStorage(){ const s = localStorage.getItem('studentData'); if(s) { try{ allStudentsData = JSON.parse(s); return true; }catch(e){ console.error(e); } } return false; }
-        function saveStudentsDataToStorage(){ localStorage.setItem('studentData', JSON.stringify(allStudentsData)); }
-        async function loadStudentsData(){ if(loadStudentsDataFromStorage()) return; try{ const resp = await fetch('students_data.json'); if(!resp.ok) throw new Error('load failed'); allStudentsData = await resp.json(); saveStudentsDataToStorage(); }catch(e){ console.error(e); showMessage('Gagal muat data', 'danger'); } }
-
-        function loadBookings(){ const s = localStorage.getItem('busBookings'); if(s) bookings = JSON.parse(s); }
-        function saveBookings(){ localStorage.setItem('busBookings', JSON.stringify(bookings)); }
-        function loadJourneyHeader(){ const s = localStorage.getItem('journeyHeader'); if(!s) return; const d=JSON.parse(s); const h=document.getElementById('journeyHeader'); if(h) h.innerHTML = `${d.text}<br><small class="text-muted">${d.date}</small>`; }
-        function saveJourneyHeader(text,date){ localStorage.setItem('journeyHeader', JSON.stringify({text,date})); const h=document.getElementById('journeyHeader'); if(h) h.innerHTML = `${text}<br><small class="text-muted">${date}</small>`; }
 
         function updateAdminUI(){ 
             const adminTools = document.getElementById('adminToolsHeader'); 
@@ -262,6 +235,10 @@
                 if(editBtn) editBtn.style.display = 'inline-flex';
                 if(settingsBtn) settingsBtn.style.display = 'inline-flex';
                 if(resetBtn) resetBtn.style.display = 'inline-flex';
+                const exportJsonBtn = document.getElementById('footerExportJsonHeaderBtn');
+                const importJsonBtn = document.getElementById('footerImportJsonHeaderBtn');
+                if(exportJsonBtn) exportJsonBtn.style.display = 'inline-flex';
+                if(importJsonBtn) importJsonBtn.style.display = 'inline-flex';
             } else { 
                 loginBtn.style.display = 'inline-flex'; 
                 logoutBtn.classList.add('d-none');
@@ -274,11 +251,231 @@
                 if(editBtn) editBtn.style.display = 'none';
                 if(settingsBtn) settingsBtn.style.display = 'none';
                 if(resetBtn) resetBtn.style.display = 'none';
+                const exportJsonBtn = document.getElementById('footerExportJsonHeaderBtn');
+                const importJsonBtn = document.getElementById('footerImportJsonHeaderBtn');
+                if(exportJsonBtn) exportJsonBtn.style.display = 'none';
+                if(importJsonBtn) importJsonBtn.style.display = 'none';
             } 
         }
 
+        function showMessage(text, type='info'){
+            const el = document.getElementById('message'); el.textContent = text; el.className = 'alert alert-' + type; el.style.display='block'; setTimeout(()=>el.style.display='none',3000);
+        }
+
+        function formatName(name){
+            if(!name) return '';
+            let r = name.toLowerCase().trim().split(/\s+/).map(w=>
+                w.split('-').map(p=>{
+                    if(!p) return p;
+                    return p.split("'").map((s,idx)=>{
+                        if(!s) return s;
+                        if(idx === 0) return s.charAt(0).toUpperCase() + s.slice(1);
+                        if(p.charAt(0) === "'") return s.charAt(0).toUpperCase() + s.slice(1);
+                        return s;
+                    }).join("'");
+                }).join('-')
+            ).join(' ');
+            r = r.replace(/\b(Bin|Binti)\b/gi, m=>m.toLowerCase());
+            return r;
+        }
+
+        function loadStudentsDataFromStorage(){ const s = localStorage.getItem('studentData'); if(s) { try{ allStudentsData = JSON.parse(s); return true; }catch(e){ console.error(e); } } return false; }
+        function saveStudentsDataToStorage(){ localStorage.setItem('studentData', JSON.stringify(allStudentsData)); }
+        async function loadStudentsData(){ if(loadStudentsDataFromStorage()) return; try{ const resp = await fetch('students_data.json'); if(!resp.ok) throw new Error('load failed'); allStudentsData = await resp.json(); saveStudentsDataToStorage(); }catch(e){ console.error(e); showMessage('Gagal muat data', 'danger'); } }
+
+        function loadBookings(){ const s = localStorage.getItem('busBookings'); if(s) bookings = JSON.parse(s); }
+        // Storage abstraction: try IndexedDB first, otherwise localStorage
+        async function initIndexedDB(){
+            if(!('indexedDB' in window)) return false;
+            return new Promise((resolve)=>{
+                const req = indexedDB.open('mtsd_bas_db', 1);
+                req.onupgradeneeded = function(e){ const db = e.target.result; if(!db.objectStoreNames.contains('kv')) db.createObjectStore('kv', { keyPath: 'k' }); };
+                req.onsuccess = function(e){ idbHandle = e.target.result; idbAvailable = true; resolve(true); };
+                req.onerror = function(){ idbAvailable = false; resolve(false); };
+            });
+        }
+
+        function idbGet(key){ return new Promise((resolve, reject)=>{ if(!idbHandle) return resolve(null); try{ const tx = idbHandle.transaction('kv','readonly'); const store = tx.objectStore('kv'); const r = store.get(key); r.onsuccess = ()=> resolve(r.result ? r.result.v : null); r.onerror = ()=> resolve(null); }catch(e){ resolve(null); } }); }
+        function idbSet(key, value){ return new Promise((resolve,reject)=>{ if(!idbHandle) return resolve(false); try{ const tx = idbHandle.transaction('kv','readwrite'); const store = tx.objectStore('kv'); const obj = { k: key, v: value }; const r = store.put(obj); r.onsuccess = ()=> resolve(true); r.onerror = ()=> resolve(false); }catch(e){ resolve(false); } }); }
+
+        async function loadBookings(){
+            // Try to initialize IndexedDB if available
+            await initIndexedDB();
+            if(idbAvailable){
+                const data = await idbGet('bookings');
+                if(data && typeof data === 'object') { bookings = data; return; }
+            }
+            // fallback to localStorage
+            const s = localStorage.getItem('busBookings'); if(s) bookings = JSON.parse(s);
+        }
+
+        function saveBookings(){
+            try{ localStorage.setItem('busBookings', JSON.stringify(bookings)); }catch(e){}
+            if(idbAvailable){ idbSet('bookings', bookings).catch(()=>{}); }
+        }
+        function loadJourneyHeader(){ const s = localStorage.getItem('journeyHeader'); if(!s) return; const d=JSON.parse(s); const h=document.getElementById('journeyHeader'); if(h) h.innerHTML = `${d.text}<br><small class="text-muted">${d.date}</small>`; }
+        function saveJourneyHeader(text,date){ localStorage.setItem('journeyHeader', JSON.stringify({text,date})); const h=document.getElementById('journeyHeader'); if(h) h.innerHTML = `${text}<br><small class="text-muted">${date}</small>`; }
+
+        // Export bookings to JSON file (download)
+        function exportBookingsToFile(){
+            const timestamp = getTimestamp();
+            const payload = { meta: { exportedAt: new Date().toISOString() }, bookings };
+            const a = document.createElement('a');
+            a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
+            a.download = `bookings_${timestamp}.json`;
+            document.body.appendChild(a); a.click(); a.remove();
+            showMessage('DB dieksport','success');
+        }
+
+        function createBackupBeforeImport(){
+            try{
+                const payload = { meta: { backupAt: new Date().toISOString() }, bookings };
+                lastImportBackup = payload;
+                // persist as string so undo works across reloads
+                localStorage.setItem('bookings_backup_before_import', JSON.stringify(payload));
+                // also trigger download for manual backup
+                const ts = getTimestamp();
+                const a = document.createElement('a');
+                a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
+                a.download = `bookings_backup_${ts}.json`;
+                document.body.appendChild(a); a.click(); a.remove();
+                return true;
+            }catch(e){ console.error('backup failed', e); return false; }
+        }
+
+        function openAdminDBModal(){
+            if(!isAdmin){ pendingDBImportOpen = true; openAdminLoginModal(); return; }
+            document.getElementById('dbImportFile').value = '';
+            document.getElementById('dbImportPreview').style.display = 'none';
+            document.getElementById('dbImportPreviewText').textContent = '';
+            document.getElementById('dbImportPreviewCount').textContent = '';
+            document.getElementById('dbImportConfirmBtn').disabled = true;
+            document.getElementById('dbUndoImportBtn').disabled = !localStorage.getItem('bookings_backup_before_import');
+            document.getElementById('dbImportPreviewSummary').textContent = '';
+            // clear conflict lists
+            importConflictKeys = [];
+            importNewKeys = [];
+            const conflictContainer = document.getElementById('dbConflictList'); if(conflictContainer) conflictContainer.innerHTML='';
+            new bootstrap.Modal(document.getElementById('adminDBModal')).show();
+        }
+
+        function previewImportBookings(){
+            const f = document.getElementById('dbImportFile').files[0];
+            if(!f) return;
+            const r = new FileReader();
+            r.onload = e => {
+                try{
+                    const parsed = JSON.parse(e.target.result);
+                    // Accept either { bookings: {...} } or plain bookings object
+                    const data = parsed.bookings || parsed;
+                    if(typeof data !== 'object' || Array.isArray(data)) throw new Error('Invalid format');
+                    parsedImportBookings = data;
+                    const keys = Object.keys(data);
+                    document.getElementById('dbImportPreviewText').textContent = JSON.stringify(Object.fromEntries(keys.slice(0,200).map(k=>[k, data[k]])), null, 2);
+                    document.getElementById('dbImportPreviewCount').textContent = `Objek tempahan: ${keys.length}`;
+                    // compute summary: new vs conflicts
+                    const existingKeys = new Set(Object.keys(bookings));
+                    let conflicts = 0; let additions = 0;
+                    importConflictKeys = [];
+                    importNewKeys = [];
+                    keys.forEach(k=>{ if(existingKeys.has(k)){ conflicts++; importConflictKeys.push(k); } else { additions++; importNewKeys.push(k); } });
+                    document.getElementById('dbImportPreviewSummary').textContent = `Baru: ${additions}  Konflik (sudah ada): ${conflicts}`;
+                    // build small conflict UI
+                    const conflictContainer = document.getElementById('dbConflictList'); conflictContainer.innerHTML = '';
+                    if(importNewKeys.length){
+                        const s = document.createElement('div'); s.className='small mb-1'; s.textContent = `Baru (pilih untuk import): ${importNewKeys.length}`; conflictContainer.appendChild(s);
+                        const ul = document.createElement('div'); importNewKeys.slice(0,200).forEach(k=>{ const row=document.createElement('div'); row.className='form-check'; row.innerHTML = `<input class="form-check-input" type="checkbox" id="inc_${CSS.escape(k)}" checked><label class="form-check-label small" for="inc_${CSS.escape(k)}">${k}</label>`; ul.appendChild(row); }); conflictContainer.appendChild(ul);
+                    }
+                    if(importConflictKeys.length){
+                        const s2 = document.createElement('div'); s2.className='small mt-2 mb-1'; s2.textContent = `Konflik (pilih tindakan untuk setiap nama): ${importConflictKeys.length}`; conflictContainer.appendChild(s2);
+                        const list = document.createElement('div'); importConflictKeys.slice(0,200).forEach(k=>{
+                            const existingVal = bookings[k];
+                            const incomingVal = data[k];
+                            const row = document.createElement('div'); row.className='mb-2 p-2'; row.style.background='#fff';
+                            row.innerHTML = `<div class="small fw-bold">${k}</div><div class="small text-muted">Sedia ada: ${JSON.stringify(existingVal)} &nbsp;|&nbsp; Import: ${JSON.stringify(incomingVal)}</div>`;
+                            const opt1 = document.createElement('div'); opt1.className='form-check form-check-inline'; opt1.innerHTML = `<input class="form-check-input" type="radio" name="conf_${CSS.escape(k)}" id="conf_keep_${CSS.escape(k)}" value="keep" checked><label class="form-check-label small" for="conf_keep_${CSS.escape(k)}">Kekalkan sedia ada</label>`;
+                            const opt2 = document.createElement('div'); opt2.className='form-check form-check-inline'; opt2.innerHTML = `<input class="form-check-input" type="radio" name="conf_${CSS.escape(k)}" id="conf_replace_${CSS.escape(k)}" value="replace"><label class="form-check-label small" for="conf_replace_${CSS.escape(k)}">Gantikan dengan import</label>`;
+                            row.appendChild(opt1); row.appendChild(opt2); list.appendChild(row);
+                        }); conflictContainer.appendChild(list);
+                    }
+                    document.getElementById('dbImportPreview').style.display = 'block';
+                    document.getElementById('dbImportConfirmBtn').disabled = false;
+                }catch(err){
+                    parsedImportBookings = null;
+                    document.getElementById('dbImportPreviewText').textContent = 'Gagal baca JSON: ' + err.message;
+                    document.getElementById('dbImportPreviewCount').textContent = '';
+                    document.getElementById('dbImportPreview').style.display = 'block';
+                    document.getElementById('dbImportConfirmBtn').disabled = true;
+                }
+            };
+            r.readAsText(f,'utf-8');
+        }
+
+        function confirmImportBookings(){
+            if(!isAdmin){ showMessage('Perlu log masuk sebagai admin','danger'); return; }
+            if(!parsedImportBookings){ showMessage('Tiada data untuk diimport','danger'); return; }
+            // Auto-backup if requested
+            const autoBackup = document.getElementById('dbAutoBackup')?.checked;
+            if(autoBackup){ createBackupBeforeImport(); }
+
+            // Read selected mode
+            const mode = document.querySelector('input[name="importMode"]:checked')?.value || 'overwrite';
+            if(mode === 'overwrite'){
+                // If per-key UI present, respect choices
+                const final = {};
+                // include only new keys checked
+                importNewKeys.forEach(k=>{ const chk = document.getElementById('inc_' + k); if(!chk || chk.checked) final[k] = parsedImportBookings[k]; });
+                // for conflicts, apply per-key choice
+                importConflictKeys.forEach(k=>{ const sel = document.querySelector('input[name="conf_' + k + '"]:checked'); if(sel && sel.value === 'replace'){ final[k] = parsedImportBookings[k]; } else { /* keep existing, so copy from bookings if present */ if(bookings[k]) final[k] = bookings[k]; } });
+                // also include any other keys in parsedImportBookings not listed (defensive)
+                Object.keys(parsedImportBookings).forEach(k=>{ if(!final.hasOwnProperty(k) && parsedImportBookings[k] !== undefined) final[k] = parsedImportBookings[k]; });
+                bookings = final;
+            } else if(mode === 'merge'){
+                // merge: add keys that don't exist yet, but allow exclusions via checkboxes
+                const newBookings = Object.assign({}, bookings);
+                importNewKeys.forEach(k=>{ const chk = document.getElementById('inc_' + k); if(!chk || chk.checked) newBookings[k] = parsedImportBookings[k]; });
+                // conflicts: keep existing (default) or replace if chosen
+                importConflictKeys.forEach(k=>{ const sel = document.querySelector('input[name="conf_' + k + '"]:checked'); if(sel && sel.value === 'replace'){ newBookings[k] = parsedImportBookings[k]; } });
+                bookings = newBookings;
+            }
+            saveBookings();
+            selectedBulk.clear();
+            updateStudentsByFilter();
+            updateBookedList();
+            // enable undo if backup exists
+            const undoBtn = document.getElementById('dbUndoImportBtn');
+            if(undoBtn){
+                const hasBackup = !!localStorage.getItem('bookings_backup_before_import');
+                undoBtn.disabled = !hasBackup;
+            }
+            bootstrap.Modal.getInstance(document.getElementById('adminDBModal')).hide();
+            showMessage('DB diimport','success');
+        }
+
+        function undoLastImport(){
+            const raw = localStorage.getItem('bookings_backup_before_import');
+            if(!raw){ showMessage('Tiada sandaran import ditemui','warning'); return; }
+            try{
+                const parsed = JSON.parse(raw);
+                const data = parsed.bookings || parsed;
+                if(typeof data !== 'object') throw new Error('format sandaran tidak sah');
+                bookings = data;
+                saveBookings();
+                selectedBulk.clear();
+                updateStudentsByFilter();
+                updateBookedList();
+                // clear backup after undo to avoid repeated undos
+                localStorage.removeItem('bookings_backup_before_import');
+                lastImportBackup = null;
+                document.getElementById('dbUndoImportBtn').disabled = true;
+                showMessage('Import dibatalkan (undo) — sandaran dipulihkan','success');
+            }catch(e){ showMessage('Gagal pulihkan sandaran: '+e.message,'danger'); }
+        }
+
+        
+
         function openAdminLoginModal(){ document.getElementById('adminPassword').value=''; document.getElementById('adminModalTitle').textContent='Log Masuk Admin'; document.getElementById('adminModalBody').innerHTML = '<label class="form-label small">Kata Laluan Admin:</label><input id="adminPassword" class="form-control form-control-sm" type="password">'; document.getElementById('adminModalFooter').innerHTML = '<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary btn-sm" onclick="doAdminLogin()">Log Masuk</button>'; new bootstrap.Modal(document.getElementById('adminModal')).show(); }
-        function doAdminLogin(){ const p = document.getElementById('adminPassword').value; if(p!==SECRET_PASS){ showMessage('Kata laluan salah','danger'); return; } isAdmin=true; updateAdminUI(); const adminModalEl = document.getElementById('adminModal'); const adminModalInst = bootstrap.Modal.getInstance(adminModalEl) || bootstrap.Modal.getOrCreateInstance(adminModalEl); if(adminModalInst) adminModalInst.hide(); showMessage('Berjaya log masuk','success'); if(pendingSettingsOpen){ pendingSettingsOpen = false; openAdminSettingsModal(); } }
+        function doAdminLogin(){ const p = document.getElementById('adminPassword').value; if(p!==SECRET_PASS){ showMessage('Kata laluan salah','danger'); return; } isAdmin=true; updateAdminUI(); const adminModalEl = document.getElementById('adminModal'); const adminModalInst = bootstrap.Modal.getInstance(adminModalEl) || bootstrap.Modal.getOrCreateInstance(adminModalEl); if(adminModalInst) adminModalInst.hide(); showMessage('Berjaya log masuk','success'); if(pendingSettingsOpen){ pendingSettingsOpen = false; openAdminSettingsModal(); } if(pendingDBImportOpen){ pendingDBImportOpen = false; openAdminDBModal(); } }
         function adminLogout(){ isAdmin=false; updateAdminUI(); showMessage('Admin log keluar','info'); }
 
         function resetAllWithConfirm(){
@@ -306,37 +503,7 @@
             const el=document.getElementById('bookedList'); 
             const names=Object.keys(bookings);
             
-            // Determine bus assignment depending on segregation setting
-            let bus1final = [];
-            let bus2final = [];
-            if(busSegregationEnabled){
-                const lelaki = names.filter(n => {
-                    const student = allStudentsData.find(s => s.nama === n);
-                    return student?.jantina === 'LELAKI';
-                });
-                const perempuan = names.filter(n => {
-                    const student = allStudentsData.find(s => s.nama === n);
-                    return student?.jantina === 'PEREMPUAN';
-                });
-
-                // Fill Bus 1 with Lelaki, overflow to Bus 2
-                const bus1 = lelaki.slice(0, BUS_CAPACITY);
-                const lelakiremainder = lelaki.slice(BUS_CAPACITY);
-
-                // Fill Bus 2 with Perempuan, plus any Lelaki overflow if space available
-                let bus2 = perempuan.slice(0, BUS_CAPACITY - lelakiremainder.length);
-                bus2 = bus2.concat(lelakiremainder.slice(0, BUS_CAPACITY - bus2.length));
-
-                // Any remaining overflow goes to Bus 1 if space
-                const perempuanoverflow = perempuan.slice(BUS_CAPACITY - lelakiremainder.length);
-                const bus1overflow = perempuanoverflow.slice(0, BUS_CAPACITY - bus1.length);
-                bus1final = bus1.concat(bus1overflow);
-                bus2final = bus2;
-            } else {
-                // Sequential fill (no segregation): fill Bus 1 then Bus 2
-                bus1final = names.slice(0, BUS_CAPACITY);
-                bus2final = names.slice(BUS_CAPACITY, BUS_CAPACITY * busCount);
-            }
+            const { bus1final, bus2final } = assignBuses(names);
             
             if(names.length===0){ 
                 el.innerHTML='<div class="text-center text-muted py-4"><i class="fas fa-inbox"></i> Tiada tempahan</div>'; 
@@ -359,46 +526,35 @@
                 el.appendChild(h); 
                 bus1final.forEach((n,i)=>{ 
                     const it=document.createElement('div'); 
-                    it.className='list-group-item d-flex align-items-center'; 
-                    const cb=document.createElement('input'); 
-                    cb.type='checkbox'; 
-                    cb.className='form-check-input me-2'; 
-                    cb.checked=selectedBulk.has(n); 
-                    cb.onchange=()=>toggleBulkSelect(n,cb.checked); 
-                    const student = allStudentsData.find(s => s.nama === n);
-                    const tingkat = student?.tingkatan || '?';
-                    const span=document.createElement('span'); 
-                    span.className='small text-primary'; 
-                    span.textContent=`${i+1}. ${formatName(n)} (F${tingkat})`; 
-                    it.appendChild(cb); 
-                    it.appendChild(span); 
-                    el.appendChild(it); 
+                    it.className = 'list-group-item d-flex align-items-center justify-content-between';
+                    const left = document.createElement('div'); left.className='d-flex align-items-center';
+                    const cb = document.createElement('input'); cb.type='checkbox'; cb.className='form-check-input me-2'; cb.checked = selectedBulk.has(n); cb.onchange = ()=>toggleBulkSelect(n, cb.checked);
+                    left.appendChild(cb);
+                    const nameSpan = document.createElement('span'); nameSpan.className='small'; nameSpan.textContent = `${i+1}. ${formatName(n)}`;
+                    left.appendChild(nameSpan);
+                    it.appendChild(left);
+                    const meta = document.createElement('small'); const student = allStudentsData.find(s=>s.nama===n); const tingkat = student?.tingkatan || '?'; meta.textContent = `F${tingkat}`;
+                    it.appendChild(meta);
+                    el.appendChild(it);
                 }); 
             }
             if(bus2final.length){ 
-                const h=document.createElement('div'); 
-                h.className='list-group-item bg-light mt-2'; 
-                h.textContent=`Bas 2 (${bus2final.length}/${BUS_CAPACITY})`; 
-                el.appendChild(h); 
+                const h2=document.createElement('div'); h2.className='list-group-item bg-light'; h2.textContent=`Bas 2 (${bus2final.length}/${BUS_CAPACITY})`; el.appendChild(h2);
                 bus2final.forEach((n,i)=>{ 
                     const it=document.createElement('div'); 
-                    it.className='list-group-item d-flex align-items-center'; 
-                    const cb=document.createElement('input'); 
-                    cb.type='checkbox'; 
-                    cb.className='form-check-input me-2'; 
-                    cb.checked=selectedBulk.has(n); 
-                    cb.onchange=()=>toggleBulkSelect(n,cb.checked); 
-                    const student = allStudentsData.find(s => s.nama === n);
-                    const tingkat = student?.tingkatan || '?';
-                    const span=document.createElement('span'); 
-                    span.className='small text-primary'; 
-                    span.textContent=`${i+1}. ${formatName(n)} (F${tingkat})`; 
-                    it.appendChild(cb); 
-                    it.appendChild(span); 
-                    el.appendChild(it); 
+                    it.className = 'list-group-item d-flex align-items-center justify-content-between';
+                    const left = document.createElement('div'); left.className='d-flex align-items-center';
+                    const cb = document.createElement('input'); cb.type='checkbox'; cb.className='form-check-input me-2'; cb.checked = selectedBulk.has(n); cb.onchange = ()=>toggleBulkSelect(n, cb.checked);
+                    left.appendChild(cb);
+                    const nameSpan = document.createElement('span'); nameSpan.className='small'; nameSpan.textContent = `${i+1}. ${formatName(n)}`;
+                    left.appendChild(nameSpan);
+                    it.appendChild(left);
+                    const meta = document.createElement('small'); const student = allStudentsData.find(s=>s.nama===n); const tingkat = student?.tingkatan || '?'; meta.textContent = `F${tingkat}`;
+                    it.appendChild(meta);
+                    el.appendChild(it);
                 }); 
             }
-            // sync all delete and download buttons
+            // header/footer control enabling
             const topBulk = document.getElementById('bulkDeleteBtn');
             const footBulk = document.getElementById('footerBulkDeleteBtn');
             const headerBulk = document.getElementById('footerBulkDeleteHeaderBtn');
@@ -426,48 +582,9 @@
             const names=Object.keys(bookings); 
             if(names.length===0){ showMessage('Tiada tempahan','warning'); return; } 
             const header=document.getElementById('journeyHeader').innerText.trim(); 
-            const now = new Date();
+            const timestamp = getTimestamp();
             
-            // Format timestamp for logging: yyyymmdd_hhmmss
-            const yyyy = now.getFullYear();
-            const MM = String(now.getMonth() + 1).padStart(2,'0');
-            const dd = String(now.getDate()).padStart(2,'0');
-            const HH = String(now.getHours()).padStart(2,'0');
-            const mm = String(now.getMinutes()).padStart(2,'0');
-            const ss = String(now.getSeconds()).padStart(2,'0');
-            const timestamp = `${yyyy}${MM}${dd}_${HH}${mm}${ss}`;
-            
-            // Determine bus assignment depending on segregation setting
-            let bus1final = [];
-            let bus2final = [];
-            if(busSegregationEnabled){
-                const lelaki = names.filter(n => {
-                    const student = allStudentsData.find(s => s.nama === n);
-                    return student?.jantina === 'LELAKI';
-                });
-                const perempuan = names.filter(n => {
-                    const student = allStudentsData.find(s => s.nama === n);
-                    return student?.jantina === 'PEREMPUAN';
-                });
-
-                // Fill Bus 1 with Lelaki, overflow to Bus 2
-                const bus1 = lelaki.slice(0, BUS_CAPACITY);
-                const lelakiremainder = lelaki.slice(BUS_CAPACITY);
-
-                // Fill Bus 2 with Perempuan, plus any Lelaki overflow if space available
-                let bus2 = perempuan.slice(0, BUS_CAPACITY - lelakiremainder.length);
-                bus2 = bus2.concat(lelakiremainder.slice(0, BUS_CAPACITY - bus2.length));
-
-                // Any remaining overflow goes to Bus 1 if space
-                const perempuanoverflow = perempuan.slice(BUS_CAPACITY - lelakiremainder.length);
-                const bus1overflow = perempuanoverflow.slice(0, BUS_CAPACITY - bus1.length);
-                bus1final = bus1.concat(bus1overflow);
-                bus2final = bus2;
-            } else {
-                // Sequential fill (no segregation): fill Bus 1 then Bus 2
-                bus1final = names.slice(0, BUS_CAPACITY);
-                bus2final = names.slice(BUS_CAPACITY, BUS_CAPACITY * busCount);
-            }
+            const { bus1final, bus2final } = assignBuses(names);
             
             let content='Tempahan Bas Pulang Bermalam\n';
             content+=`\n${header}\n`;
@@ -508,14 +625,7 @@
             const unbooked = allStudentsData.filter(s => !bookings[s.nama]);
             if(unbooked.length===0){ showMessage('Tiada pelajar yang belum menempah','warning'); return; }
             const header = document.getElementById('journeyHeader').innerText.trim();
-            const now = new Date();
-            const yyyy = now.getFullYear();
-            const MM = String(now.getMonth() + 1).padStart(2,'0');
-            const dd = String(now.getDate()).padStart(2,'0');
-            const HH = String(now.getHours()).padStart(2,'0');
-            const mm = String(now.getMinutes()).padStart(2,'0');
-            const ss = String(now.getSeconds()).padStart(2,'0');
-            const timestamp = `${yyyy}${MM}${dd}_${HH}${mm}${ss}`;
+            const timestamp = getTimestamp();
             let content = 'Senarai Pelajar Tidak Menempah\n';
             content += `\n${header}\n`;
             content += `\nJumlah Tidak Menempah: ${unbooked.length}\n`;
@@ -536,27 +646,7 @@
             if(names.length===0){ showMessage('Tiada tempahan','warning'); return; }
             const header = document.getElementById('journeyHeader').innerText.trim();
 
-            // Determine bus assignment depending on segregation setting (same logic as downloads)
-            let bus1final = [];
-            let bus2final = [];
-            if(busSegregationEnabled){
-                const lelaki = names.filter(n => { const student = allStudentsData.find(s => s.nama === n); return student?.jantina === 'LELAKI'; });
-                const perempuan = names.filter(n => { const student = allStudentsData.find(s => s.nama === n); return student?.jantina === 'PEREMPUAN'; });
-
-                const bus1 = lelaki.slice(0, BUS_CAPACITY);
-                const lelakiremainder = lelaki.slice(BUS_CAPACITY);
-
-                let bus2 = perempuan.slice(0, BUS_CAPACITY - lelakiremainder.length);
-                bus2 = bus2.concat(lelakiremainder.slice(0, BUS_CAPACITY - bus2.length));
-
-                const perempuanoverflow = perempuan.slice(BUS_CAPACITY - lelakiremainder.length);
-                const bus1overflow = perempuanoverflow.slice(0, BUS_CAPACITY - bus1.length);
-                bus1final = bus1.concat(bus1overflow);
-                bus2final = bus2;
-            } else {
-                bus1final = names.slice(0, BUS_CAPACITY);
-                bus2final = names.slice(BUS_CAPACITY, BUS_CAPACITY * busCount);
-            }
+            const { bus1final, bus2final } = assignBuses(names);
 
             let content = 'Tempahan Bas Pulang Bermalam\n';
             content += `\n${header}\n`;
@@ -704,7 +794,7 @@
 
         function confirmImportStudents(){ if(!isAdmin){ const p=document.getElementById('adminImportPassword').value; if(p!==SECRET_PASS){ document.getElementById('importMessage').textContent='Kata laluan salah'; document.getElementById('importMessage').className='alert alert-danger'; document.getElementById('importMessage').style.display='block'; return; } } const f=document.getElementById('csvImportFile').files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ const csv=e.target.result; const lines=csv.split(/\r?\n/).filter(Boolean); const headers=lines[0].split(',').map(h=>h.trim().toUpperCase()); const rows=[]; for(let i=1;i<lines.length;i++){ const vals=lines[i].split(','); const obj={}; headers.forEach((h,idx)=> obj[h]= (vals[idx]||'').trim()); rows.push(obj); } allStudentsData = rows.map(row=>({ nama: row['NAMA']||'', jantina: row['JANTINA']||'', tingkatan: row['TINGKATAN']||'' })); saveStudentsDataToStorage(); bookings={}; saveBookings(); selectedBulk.clear(); updateStudentsByFilter(); updateBookedList(); bootstrap.Modal.getInstance(document.getElementById('adminImportModal')).hide(); showMessage(`Diimport ${allStudentsData.length} pelajar`,'success'); }; r.readAsText(f,'utf-8'); }
 
-        document.addEventListener('DOMContentLoaded', async ()=>{ loadBookings(); loadJourneyHeader(); await loadStudentsData(); loadSettings(); updateAdminUI(); updateStudentList(); updateBookedList(); });
+        document.addEventListener('DOMContentLoaded', async ()=>{ await loadBookings(); loadJourneyHeader(); await loadStudentsData(); loadSettings(); updateAdminUI(); updateStudentList(); updateBookedList(); });
     </script>
 </body>
 </html>
