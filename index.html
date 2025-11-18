@@ -20,22 +20,22 @@
                 <button id="footerSettingsHeaderBtn" class="btn btn-sm p-1" title="Tetapan Bas" onclick="openAdminSettingsModal()" style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
                     <i class="fas fa-cog"></i>
                 </button>
-                <button id="footerDownloadHeaderBtn" class="btn btn-sm p-1" title="Muat Turun" onclick="downloadSenarai()" disabled style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">
-                    <i class="fas fa-download"></i>
-                </button>
-                <button id="footerBulkDeleteHeaderBtn" class="btn btn-sm p-1" title="Padam Terpilih" onclick="openAdminModalForBulkDelete()" disabled style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">
-                    <i class="fas fa-trash"></i>
-                </button>
-                <button id="footerImportHeaderBtn" class="btn btn-sm p-1" title="Import CSV (Admin)" onclick="openAdminImportModal()" style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">
-                    <i class="fas fa-file-upload"></i>
-                </button>
-                <button id="footerEditJourneyHeaderBtn" class="btn btn-sm p-1" title="Edit Perjalanan" onclick="openAdminModalForEdit()" style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">
+                <button id="footerEditJourneyHeaderBtn" class="btn btn-sm p-1" title="Edit Perjalanan" onclick="openAdminModalForEdit()" style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
                     <i class="fas fa-pen"></i>
                 </button>
-                <button id="resetAllHeaderBtn" class="btn btn-sm p-1" title="Reset Semua" onclick="resetAllWithConfirm()" style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">
+                <button id="footerDownloadHeaderBtn" class="btn btn-sm p-1" title="Muat Turun" onclick="downloadSenarai()" disabled style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button id="footerBulkDeleteHeaderBtn" class="btn btn-sm p-1" title="Padam Terpilih" onclick="openAdminModalForBulkDelete()" disabled style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button id="footerImportHeaderBtn" class="btn btn-sm p-1" title="Import CSV (Admin)" onclick="openAdminImportModal()" style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fas fa-file-upload"></i>
+                </button>
+                <button id="resetAllHeaderBtn" class="btn btn-sm p-1" title="Reset Semua" onclick="resetAllWithConfirm()" style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
                     <i class="fas fa-sync-alt"></i>
                 </button>
-                <button id="adminLogoutHeaderBtn" class="btn btn-sm p-1 d-none" title="Log Keluar" onclick="adminLogout()" style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">
+                <button id="adminLogoutHeaderBtn" class="btn btn-sm p-1 d-none" title="Log Keluar" onclick="adminLogout()" style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
                     <i class="fas fa-power-off"></i>
                 </button>
             </div>
@@ -43,9 +43,10 @@
             <div id="message" class="alert mb-2" role="alert" style="display:none"></div>
 
             <div class="text-center mb-3">
-                <div id="journeyHeader" class="small text-muted p-2" style="cursor:pointer;background-color:#fff3cd;border-left:4px solid #ffc107;display:inline-block;border-radius:4px;font-weight:bold">
-                    <i class="fas fa-map-marker-alt"></i> Sila tetapkan perjalanan
+                <div id="journeyHeader" class="small text-muted p-2" style="background-color:#fff3cd;border-left:4px solid #ffc107;display:inline-block;border-radius:4px;font-weight:bold">
+                    Sila tetapkan perjalanan
                 </div>
+                
             </div>
 
             <div class="row g-3">
@@ -126,6 +127,7 @@
         let pendingDeleteList = [];
         let pendingJourneyEdit = null;
         let isAdmin = false;
+        let pendingSettingsOpen = false;
         // Bus segregation setting (persisted)
         let busSegregationEnabled = true;
 
@@ -140,14 +142,21 @@
         function saveSettings(){
             localStorage.setItem('busSegregationEnabled', busSegregationEnabled);
             localStorage.setItem('busCount', String(busCount));
+            // if only 1 bus, ensure settings checkbox in modal is disabled when open
+            const elSeg = document.getElementById('settingsSegregation');
+            if(elSeg) elSeg.disabled = (busCount === 1);
         }
 
+        
+
         function openAdminSettingsModal(){
-            if(!isAdmin){ openAdminLoginModal(); return; }
+            if(!isAdmin){ pendingSettingsOpen = true; openAdminLoginModal(); return; }
             const elCount = document.getElementById('settingsBusCount');
             const elSeg = document.getElementById('settingsSegregation');
             if(elCount) elCount.value = busCount;
             if(elSeg) elSeg.checked = busSegregationEnabled;
+            // if only 1 bus, disable segregation checkbox
+            if(elSeg) elSeg.disabled = (busCount === 1);
             new bootstrap.Modal(document.getElementById('adminSettingsModal')).show();
         }
 
@@ -157,11 +166,28 @@
             const elSeg = document.getElementById('settingsSegregation');
             const val = parseInt(elCount.value,10);
             if(isNaN(val) || val < 1){ showMessage('Sila masukkan bilangan bas yang sah','danger'); return; }
-            busCount = Math.min(10, val);
-            busSegregationEnabled = !!elSeg.checked;
+            const newBusCount = Math.min(10, val);
+            const currentBookings = Object.keys(bookings).length;
+            const newTotal = BUS_CAPACITY * newBusCount;
+            if(currentBookings > newTotal){
+                const overflow = currentBookings - newTotal;
+                if(!confirm(`Mengurangkan jumlah bas kepada ${newBusCount} akan menyebabkan ${overflow} tempahan melebihi kapasiti (${newTotal}). Teruskan?`)){
+                    return;
+                }
+            }
+            busCount = newBusCount;
+            // if only 1 bus, force segregation off
+            if(busCount === 1){
+                busSegregationEnabled = false;
+            } else {
+                busSegregationEnabled = !!elSeg.checked;
+            }
             saveSettings();
             updateBookedList();
-            bootstrap.Modal.getInstance(document.getElementById('adminSettingsModal')).hide();
+            // hide settings modal robustly (create instance if needed)
+            const settingsEl = document.getElementById('adminSettingsModal');
+            const settingsInst = bootstrap.Modal.getInstance(settingsEl) || bootstrap.Modal.getOrCreateInstance(settingsEl);
+            if(settingsInst) settingsInst.hide();
             showMessage('Tetapan disimpan','success');
         }
 
@@ -191,8 +217,8 @@
 
         function loadBookings(){ const s = localStorage.getItem('busBookings'); if(s) bookings = JSON.parse(s); }
         function saveBookings(){ localStorage.setItem('busBookings', JSON.stringify(bookings)); }
-        function loadJourneyHeader(){ const s = localStorage.getItem('journeyHeader'); if(!s) return; const d=JSON.parse(s); const h=document.getElementById('journeyHeader'); h.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${d.text}<br><small class="text-muted">📅 ${d.date}</small>`; }
-        function saveJourneyHeader(text,date){ localStorage.setItem('journeyHeader', JSON.stringify({text,date})); const h=document.getElementById('journeyHeader'); if(h) h.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${text}<br><small class="text-muted">📅 ${date}</small>`; }
+        function loadJourneyHeader(){ const s = localStorage.getItem('journeyHeader'); if(!s) return; const d=JSON.parse(s); const h=document.getElementById('journeyHeader'); if(h) h.innerHTML = `${d.text}<br><small class="text-muted">${d.date}</small>`; }
+        function saveJourneyHeader(text,date){ localStorage.setItem('journeyHeader', JSON.stringify({text,date})); const h=document.getElementById('journeyHeader'); if(h) h.innerHTML = `${text}<br><small class="text-muted">${date}</small>`; }
 
         function updateAdminUI(){ 
             const adminTools = document.getElementById('adminToolsHeader'); 
@@ -208,6 +234,7 @@
                 adminTools.style.display = 'flex'; 
                 loginBtn.style.display = 'none'; 
                 logoutBtn.classList.remove('d-none'); 
+                logoutBtn.style.display = 'inline-flex';
                 if(downloadBtn) downloadBtn.style.display = 'inline-flex';
                 if(deleteBtn) deleteBtn.style.display = 'inline-flex';
                 if(importBtn) importBtn.style.display = 'inline-flex';
@@ -217,6 +244,7 @@
             } else { 
                 loginBtn.style.display = 'inline-flex'; 
                 logoutBtn.classList.add('d-none');
+                logoutBtn.style.display = 'none';
                 if(downloadBtn) downloadBtn.style.display = 'none';
                 if(deleteBtn) deleteBtn.style.display = 'none';
                 if(importBtn) importBtn.style.display = 'none';
@@ -227,7 +255,7 @@
         }
 
         function openAdminLoginModal(){ document.getElementById('adminPassword').value=''; document.getElementById('adminModalTitle').textContent='Log Masuk Admin'; document.getElementById('adminModalBody').innerHTML = '<label class="form-label small">Kata Laluan Admin:</label><input id="adminPassword" class="form-control form-control-sm" type="password">'; document.getElementById('adminModalFooter').innerHTML = '<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary btn-sm" onclick="doAdminLogin()">Log Masuk</button>'; new bootstrap.Modal(document.getElementById('adminModal')).show(); }
-        function doAdminLogin(){ const p = document.getElementById('adminPassword').value; if(p!==ADMIN_PASSWORD){ showMessage('Kata laluan salah','danger'); return; } isAdmin=true; updateAdminUI(); bootstrap.Modal.getInstance(document.getElementById('adminModal')).hide(); showMessage('Berjaya log masuk','success'); }
+        function doAdminLogin(){ const p = document.getElementById('adminPassword').value; if(p!==ADMIN_PASSWORD){ showMessage('Kata laluan salah','danger'); return; } isAdmin=true; updateAdminUI(); const adminModalEl = document.getElementById('adminModal'); const adminModalInst = bootstrap.Modal.getInstance(adminModalEl) || bootstrap.Modal.getOrCreateInstance(adminModalEl); if(adminModalInst) adminModalInst.hide(); showMessage('Berjaya log masuk','success'); if(pendingSettingsOpen){ pendingSettingsOpen = false; openAdminSettingsModal(); } }
         function adminLogout(){ isAdmin=false; updateAdminUI(); showMessage('Admin log keluar','info'); }
 
         function resetAllWithConfirm(){
@@ -237,7 +265,7 @@
             selectedBulk.clear();
             localStorage.removeItem('journeyHeader');
             const h = document.getElementById('journeyHeader');
-            if(h) h.innerHTML = `<i class="fas fa-map-marker-alt"></i> Sila tetapkan perjalanan`;
+            if(h) h.innerHTML = `Sila tetapkan perjalanan`;
             updateBookedList();
             updateStudentList();
             showMessage('Semua data di-reset','success');
@@ -366,7 +394,7 @@
         function downloadSenarai(){ 
             const names=Object.keys(bookings); 
             if(names.length===0){ showMessage('Tiada tempahan','warning'); return; } 
-            const header=document.getElementById('journeyHeader').innerText.trim().replace(/📅\s*/,''); 
+            const header=document.getElementById('journeyHeader').innerText.trim(); 
             const now = new Date();
             
             // Format timestamp for logging: yyyymmdd_hhmmss
