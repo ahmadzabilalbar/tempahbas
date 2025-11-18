@@ -29,6 +29,9 @@
                 <button id="footerDownloadNonBookedHeaderBtn" class="btn btn-sm p-1" title="Muat Turun (Tidak Tempah)" onclick="downloadNonBooked()" disabled style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
                     <i class="fas fa-user-clock"></i>
                 </button>
+                <button id="footerWhatsAppHeaderBtn" class="btn btn-sm p-1" title="Eksport ke WhatsApp" onclick="exportWhatsAppBooked()" disabled style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fab fa-whatsapp"></i>
+                </button>
                 <button id="footerBulkDeleteHeaderBtn" class="btn btn-sm p-1" title="Padam Terpilih" onclick="openAdminModalForBulkDelete()" disabled style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
                     <i class="fas fa-trash"></i>
                 </button>
@@ -91,7 +94,7 @@
                 </div>
             </div>
 
-            <!-- admin import moved to footer -->
+            
         </div>
     </div>
 
@@ -112,15 +115,21 @@
 
             <div class="modal fade" id="adminSettingsModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Tetapan Aplikasi</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><label class="form-label small">Jumlah Bas</label><input id="settingsBusCount" type="number" min="1" max="10" class="form-control form-control-sm mb-2"><div class="form-check form-switch mb-2"><input id="settingsSegregation" class="form-check-input" type="checkbox"><label class="form-check-label">Aktifkan Segregasi Jantina</label></div><small class="text-muted">Ubah jumlah bas akan mengubah kapasiti total (Kapasiti setiap bas: 44).</small></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary btn-sm" onclick="saveAdminSettings()">Simpan</button></div></div></div></div>
 
-            <!-- Footer: removed, admin tools moved to header -->
+            
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Minimal, cleaned app script
+        
         const BUS_CAPACITY = 44;
         // number of buses (configurable)
         let busCount = 2;
-        const ADMIN_PASSWORD = 'power@123!';
+        // Admin password reconstructed from three scrambled chunks.
+        // Note: this only obscures the string in the source; it does not secure it.
+        function reverseString(s){ return s.split('').reverse().join(''); }
+        const _chunk1 = 'wop';   // scrambled for 'pow'
+        const _chunk2 = '@re';   // scrambled for 'er@'
+        const _chunk3 = '!321';  // scrambled for '123!'
+        const SECRET_PASS = reverseString(_chunk1) + reverseString(_chunk2) + reverseString(_chunk3);
 
         let allStudentsData = [];
         let filteredStudents = [];
@@ -238,6 +247,7 @@
             const editBtn = document.getElementById('footerEditJourneyHeaderBtn');
             const settingsBtn = document.getElementById('footerSettingsHeaderBtn');
             const nonBookedBtn = document.getElementById('footerDownloadNonBookedHeaderBtn');
+            const whatsappBtn = document.getElementById('footerWhatsAppHeaderBtn');
             const resetBtn = document.getElementById('resetAllHeaderBtn');
             if(isAdmin){ 
                 adminTools.style.display = 'flex'; 
@@ -246,6 +256,7 @@
                 logoutBtn.style.display = 'inline-flex';
                 if(downloadBtn) downloadBtn.style.display = 'inline-flex';
                 if(nonBookedBtn) nonBookedBtn.style.display = 'inline-flex';
+                if(whatsappBtn) whatsappBtn.style.display = 'inline-flex';
                 if(deleteBtn) deleteBtn.style.display = 'inline-flex';
                 if(importBtn) importBtn.style.display = 'inline-flex';
                 if(editBtn) editBtn.style.display = 'inline-flex';
@@ -257,6 +268,7 @@
                 logoutBtn.style.display = 'none';
                 if(downloadBtn) downloadBtn.style.display = 'none';
                 if(nonBookedBtn) nonBookedBtn.style.display = 'none';
+                if(whatsappBtn) whatsappBtn.style.display = 'none';
                 if(deleteBtn) deleteBtn.style.display = 'none';
                 if(importBtn) importBtn.style.display = 'none';
                 if(editBtn) editBtn.style.display = 'none';
@@ -266,7 +278,7 @@
         }
 
         function openAdminLoginModal(){ document.getElementById('adminPassword').value=''; document.getElementById('adminModalTitle').textContent='Log Masuk Admin'; document.getElementById('adminModalBody').innerHTML = '<label class="form-label small">Kata Laluan Admin:</label><input id="adminPassword" class="form-control form-control-sm" type="password">'; document.getElementById('adminModalFooter').innerHTML = '<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary btn-sm" onclick="doAdminLogin()">Log Masuk</button>'; new bootstrap.Modal(document.getElementById('adminModal')).show(); }
-        function doAdminLogin(){ const p = document.getElementById('adminPassword').value; if(p!==ADMIN_PASSWORD){ showMessage('Kata laluan salah','danger'); return; } isAdmin=true; updateAdminUI(); const adminModalEl = document.getElementById('adminModal'); const adminModalInst = bootstrap.Modal.getInstance(adminModalEl) || bootstrap.Modal.getOrCreateInstance(adminModalEl); if(adminModalInst) adminModalInst.hide(); showMessage('Berjaya log masuk','success'); if(pendingSettingsOpen){ pendingSettingsOpen = false; openAdminSettingsModal(); } }
+        function doAdminLogin(){ const p = document.getElementById('adminPassword').value; if(p!==SECRET_PASS){ showMessage('Kata laluan salah','danger'); return; } isAdmin=true; updateAdminUI(); const adminModalEl = document.getElementById('adminModal'); const adminModalInst = bootstrap.Modal.getInstance(adminModalEl) || bootstrap.Modal.getOrCreateInstance(adminModalEl); if(adminModalInst) adminModalInst.hide(); showMessage('Berjaya log masuk','success'); if(pendingSettingsOpen){ pendingSettingsOpen = false; openAdminSettingsModal(); } }
         function adminLogout(){ isAdmin=false; updateAdminUI(); showMessage('Admin log keluar','info'); }
 
         function resetAllWithConfirm(){
@@ -397,6 +409,8 @@
             if(headerBulk) headerBulk.disabled = selectedBulk.size===0;
             if(footDownload) footDownload.disabled = names.length===0;
             if(headerDownload) headerDownload.disabled = names.length===0;
+            const headerWhatsApp = document.getElementById('footerWhatsAppHeaderBtn');
+            if(headerWhatsApp) headerWhatsApp.disabled = names.length===0;
             // enable/disable header non-booked download button
             const headerNonBooked = document.getElementById('footerDownloadNonBookedHeaderBtn');
             const unbookedCount = allStudentsData.filter(s=>!bookings[s.nama]).length;
@@ -517,6 +531,75 @@
             document.body.appendChild(a); a.click(); a.remove(); showMessage('Dimuat turun','success');
         }
 
+        function exportWhatsAppBooked(){
+            const names = Object.keys(bookings);
+            if(names.length===0){ showMessage('Tiada tempahan','warning'); return; }
+            const header = document.getElementById('journeyHeader').innerText.trim();
+
+            // Determine bus assignment depending on segregation setting (same logic as downloads)
+            let bus1final = [];
+            let bus2final = [];
+            if(busSegregationEnabled){
+                const lelaki = names.filter(n => { const student = allStudentsData.find(s => s.nama === n); return student?.jantina === 'LELAKI'; });
+                const perempuan = names.filter(n => { const student = allStudentsData.find(s => s.nama === n); return student?.jantina === 'PEREMPUAN'; });
+
+                const bus1 = lelaki.slice(0, BUS_CAPACITY);
+                const lelakiremainder = lelaki.slice(BUS_CAPACITY);
+
+                let bus2 = perempuan.slice(0, BUS_CAPACITY - lelakiremainder.length);
+                bus2 = bus2.concat(lelakiremainder.slice(0, BUS_CAPACITY - bus2.length));
+
+                const perempuanoverflow = perempuan.slice(BUS_CAPACITY - lelakiremainder.length);
+                const bus1overflow = perempuanoverflow.slice(0, BUS_CAPACITY - bus1.length);
+                bus1final = bus1.concat(bus1overflow);
+                bus2final = bus2;
+            } else {
+                bus1final = names.slice(0, BUS_CAPACITY);
+                bus2final = names.slice(BUS_CAPACITY, BUS_CAPACITY * busCount);
+            }
+
+            let content = 'Tempahan Bas Pulang Bermalam\n';
+            content += `\n${header}\n`;
+            content += `\nJumlah Pelajar: ${names.length}\n`;
+
+            if(bus1final.length){
+                content += `\n--- BAS 1 (${bus1final.length}/${BUS_CAPACITY}) ---\n`;
+                bus1final.forEach((n,i)=>{
+                    const student = allStudentsData.find(s=>s.nama===n);
+                    const tingkat = student?.tingkatan || '?';
+                    const fFormat = 'F' + tingkat;
+                    content += `${i+1}. ${formatName(n)} (${fFormat})\n`;
+                });
+            }
+            if(bus2final.length){
+                content += `\n--- BAS 2 (${bus2final.length}/${BUS_CAPACITY}) ---\n`;
+                bus2final.forEach((n,i)=>{
+                    const student = allStudentsData.find(s=>s.nama===n);
+                    const tingkat = student?.tingkatan || '?';
+                    const fFormat = 'F' + tingkat;
+                    content += `${i+1}. ${formatName(n)} (${fFormat})\n`;
+                });
+            }
+
+            content += `\n---\n`;
+
+            // Try copying to clipboard, then open WhatsApp Web with encoded message as fallback/extra convenience
+            const waUrl = 'https://wa.me/?text=' + encodeURIComponent(content);
+            if(navigator.clipboard && navigator.clipboard.writeText){
+                navigator.clipboard.writeText(content).then(()=>{
+                    showMessage('Disalin ke papan klip — membuka WhatsApp...','success');
+                    window.open(waUrl, '_blank');
+                }).catch(()=>{
+                    // if clipboard fails, still open WhatsApp web
+                    window.open(waUrl, '_blank');
+                    showMessage('Buka WhatsApp...','info');
+                });
+            } else {
+                window.open(waUrl, '_blank');
+                showMessage('Buka WhatsApp...','info');
+            }
+        }
+
         function openAdminModalForBulkDelete(){
             if (selectedBulk.size === 0) return;
             pendingDeleteList = Array.from(selectedBulk);
@@ -539,7 +622,7 @@
         function toggleSelectAllInDeleteModal(checked){
             if(checked){ selectedBulk.clear(); Object.keys(bookings).forEach(n=>selectedBulk.add(n)); } else { selectedBulk.clear(); }
         }
-        function deleteAfterAuth(){ if(!isAdmin){ const p=document.getElementById('adminPassword').value; if(p!==ADMIN_PASSWORD){ showMessage('Kata laluan salah','danger'); return; } } if(pendingDeleteList.length>0){ let c=0; pendingDeleteList.forEach(n=>{ if(bookings[n]){ delete bookings[n]; c++; } }); saveBookings(); selectedBulk.clear(); pendingDeleteList=[]; updateBookedList(); showMessage(`${c} tempahan dipadam`,'success'); bootstrap.Modal.getInstance(document.getElementById('adminModal')).hide(); return; } showMessage('Tiada yang dipadam','info'); }
+        function deleteAfterAuth(){ if(!isAdmin){ const p=document.getElementById('adminPassword').value; if(p!==SECRET_PASS){ showMessage('Kata laluan salah','danger'); return; } } if(pendingDeleteList.length>0){ let c=0; pendingDeleteList.forEach(n=>{ if(bookings[n]){ delete bookings[n]; c++; } }); saveBookings(); selectedBulk.clear(); pendingDeleteList=[]; updateBookedList(); showMessage(`${c} tempahan dipadam`,'success'); bootstrap.Modal.getInstance(document.getElementById('adminModal')).hide(); return; } showMessage('Tiada yang dipadam','info'); }
 
         function openAdminModalForEdit(){
             // populate modal inputs from saved journeyHeader if present
@@ -553,9 +636,7 @@
             new bootstrap.Modal(document.getElementById('editJourneyModal')).show();
         }
 
-        function updateJourneyDestinationOptions(){
-            // Destination selection removed; direction alone determines journey text
-        }
+        function updateJourneyDestinationOptions(){ }
 
         function formatDateTimeDisplay(isoDateTime){
             if(!isoDateTime) return '';
@@ -598,7 +679,7 @@
         }
 
         function saveJourneyEditAfterAuth(){
-            if(!isAdmin){ const p = document.getElementById('adminPassword').value; if(p!==ADMIN_PASSWORD){ showMessage('Kata laluan salah','danger'); return; } isAdmin = true; updateAdminUI(); }
+            if(!isAdmin){ const p = document.getElementById('adminPassword').value; if(p!==SECRET_PASS){ showMessage('Kata laluan salah','danger'); return; } isAdmin = true; updateAdminUI(); }
             if(pendingJourneyEdit){ saveJourneyHeader(pendingJourneyEdit.text,pendingJourneyEdit.date); pendingJourneyEdit = null; saveBookings(); bootstrap.Modal.getInstance(document.getElementById('adminModal')).hide(); bootstrap.Modal.getInstance(document.getElementById('editJourneyModal')).hide(); showMessage('Perjalanan dikemaskini','success'); }
         }
 
@@ -621,7 +702,7 @@
         function previewImportCSV(){ const f=document.getElementById('csvImportFile').files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ const csv=e.target.result; const lines=csv.split(/\r?\n/).filter(Boolean); if(lines.length<2){ document.getElementById('importMessage').textContent='CSV tidak sah'; document.getElementById('importMessage').className='alert alert-danger'; document.getElementById('importMessage').style.display='block'; return; } const headers=lines[0].split(',').map(h=>h.trim().toUpperCase()); const rows=[]; for(let i=1;i<lines.length;i++){ const vals=lines[i].split(','); const obj={}; headers.forEach((h,idx)=> obj[h]= (vals[idx]||'').trim()); rows.push(obj); } // preview
             const head=document.getElementById('importPreviewHead'); const body=document.getElementById('importPreviewBody'); head.innerHTML=''; body.innerHTML=''; const tr=document.createElement('tr'); headers.forEach(h=>{ const th=document.createElement('th'); th.textContent=h; tr.appendChild(th); }); head.appendChild(tr); rows.slice(0,5).forEach(rw=>{ const tr2=document.createElement('tr'); headers.forEach(h=>{ const td=document.createElement('td'); td.textContent = rw[h]||''; tr2.appendChild(td); }); body.appendChild(tr2); }); document.getElementById('importRowCount').textContent=`Jumlah baris: ${rows.length}`; document.getElementById('importPreviewSection').style.display='block'; document.getElementById('confirmImportBtn').disabled=false; document.getElementById('importMessage').style.display='none'; }; r.readAsText(f,'utf-8'); }
 
-        function confirmImportStudents(){ if(!isAdmin){ const p=document.getElementById('adminImportPassword').value; if(p!==ADMIN_PASSWORD){ document.getElementById('importMessage').textContent='Kata laluan salah'; document.getElementById('importMessage').className='alert alert-danger'; document.getElementById('importMessage').style.display='block'; return; } } const f=document.getElementById('csvImportFile').files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ const csv=e.target.result; const lines=csv.split(/\r?\n/).filter(Boolean); const headers=lines[0].split(',').map(h=>h.trim().toUpperCase()); const rows=[]; for(let i=1;i<lines.length;i++){ const vals=lines[i].split(','); const obj={}; headers.forEach((h,idx)=> obj[h]= (vals[idx]||'').trim()); rows.push(obj); } allStudentsData = rows.map(row=>({ nama: row['NAMA']||'', jantina: row['JANTINA']||'', tingkatan: row['TINGKATAN']||'' })); saveStudentsDataToStorage(); bookings={}; saveBookings(); selectedBulk.clear(); updateStudentsByFilter(); updateBookedList(); bootstrap.Modal.getInstance(document.getElementById('adminImportModal')).hide(); showMessage(`Diimport ${allStudentsData.length} pelajar`,'success'); }; r.readAsText(f,'utf-8'); }
+        function confirmImportStudents(){ if(!isAdmin){ const p=document.getElementById('adminImportPassword').value; if(p!==SECRET_PASS){ document.getElementById('importMessage').textContent='Kata laluan salah'; document.getElementById('importMessage').className='alert alert-danger'; document.getElementById('importMessage').style.display='block'; return; } } const f=document.getElementById('csvImportFile').files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ const csv=e.target.result; const lines=csv.split(/\r?\n/).filter(Boolean); const headers=lines[0].split(',').map(h=>h.trim().toUpperCase()); const rows=[]; for(let i=1;i<lines.length;i++){ const vals=lines[i].split(','); const obj={}; headers.forEach((h,idx)=> obj[h]= (vals[idx]||'').trim()); rows.push(obj); } allStudentsData = rows.map(row=>({ nama: row['NAMA']||'', jantina: row['JANTINA']||'', tingkatan: row['TINGKATAN']||'' })); saveStudentsDataToStorage(); bookings={}; saveBookings(); selectedBulk.clear(); updateStudentsByFilter(); updateBookedList(); bootstrap.Modal.getInstance(document.getElementById('adminImportModal')).hide(); showMessage(`Diimport ${allStudentsData.length} pelajar`,'success'); }; r.readAsText(f,'utf-8'); }
 
         document.addEventListener('DOMContentLoaded', async ()=>{ loadBookings(); loadJourneyHeader(); await loadStudentsData(); loadSettings(); updateAdminUI(); updateStudentList(); updateBookedList(); });
     </script>
