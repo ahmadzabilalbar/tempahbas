@@ -13,18 +13,44 @@
         <div class="bg-white rounded shadow p-3">
             <h1 class="h4 text-center mb-3"><i class="fas fa-bus"></i> Tempahan Bas Pulang Bermalam</h1>
 
+            <div id="adminToolsHeader" class="d-flex justify-content-end gap-1 mb-3" style="display:none">
+                <button id="adminLoginHeaderBtn" class="btn btn-sm p-1" title="Admin" onclick="openAdminLoginModal()" style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fas fa-user-lock"></i>
+                </button>
+                <button id="footerSettingsHeaderBtn" class="btn btn-sm p-1" title="Tetapan Bas" onclick="openAdminSettingsModal()" style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button id="footerDownloadHeaderBtn" class="btn btn-sm p-1" title="Muat Turun" onclick="downloadSenarai()" disabled style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button id="footerBulkDeleteHeaderBtn" class="btn btn-sm p-1" title="Padam Terpilih" onclick="openAdminModalForBulkDelete()" disabled style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button id="footerImportHeaderBtn" class="btn btn-sm p-1" title="Import CSV (Admin)" onclick="openAdminImportModal()" style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fas fa-file-upload"></i>
+                </button>
+                <button id="footerEditJourneyHeaderBtn" class="btn btn-sm p-1" title="Edit Perjalanan" onclick="openAdminModalForEdit()" style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fas fa-pen"></i>
+                </button>
+                <button id="resetAllHeaderBtn" class="btn btn-sm p-1" title="Reset Semua" onclick="resetAllWithConfirm()" style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button id="adminLogoutHeaderBtn" class="btn btn-sm p-1 d-none" title="Log Keluar" onclick="adminLogout()" style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fas fa-power-off"></i>
+                </button>
+            </div>
+
             <div id="message" class="alert mb-2" role="alert" style="display:none"></div>
 
             <div class="text-center mb-3">
-                <div id="journeyHeader" class="small text-muted p-2" style="cursor:pointer;background-color:#fff3cd;border-left:4px solid #ffc107;display:inline-block;border-radius:4px">
-                    <i class="fas fa-map-marker-alt"></i> Perjalanan dari MTSD ke Alor Setar<br><small class="text-muted">📅 Khamis, 20 Nov 2025</small>
+                <div id="journeyHeader" class="small text-muted p-2" style="cursor:pointer;background-color:#fff3cd;border-left:4px solid #ffc107;display:inline-block;border-radius:4px;font-weight:bold">
+                    <i class="fas fa-map-marker-alt"></i> Sila tetapkan perjalanan
                 </div>
             </div>
 
             <div class="row g-3">
                 <div class="col-md-4">
                     <div class="mb-2">
-                        <label class="form-label small">Jantina</label>
                         <select id="genderFilter" class="form-select form-select-sm" onchange="updateStudentsByFilter()">
                             <option value="">-- Pilih Jantina --</option>
                             <option value="LELAKI">Lelaki</option>
@@ -32,7 +58,6 @@
                         </select>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label small">Tingkatan</label>
                         <select id="classFilter" class="form-select form-select-sm" onchange="updateStudentsByFilter()">
                             <option value="">-- Pilih Tingkatan --</option>
                             <option value="1">T1</option>
@@ -42,29 +67,19 @@
                             <option value="5">T5</option>
                         </select>
                     </div>
-
-                    <div class="mt-3 text-center">
-                        <div id="selectedStudentAlert" class="alert alert-info d-none small mb-2"><i class="fas fa-check-circle"></i> Dipilih: <strong id="selectedStudentText"></strong></div>
+                    <div id="studentList" class="list-group mb-3">
+                        <div class="text-center text-muted py-4"><i class="fas fa-inbox"></i></div>
+                    </div>
+                    <div class="text-center">
+                        <div id="selectedStudentAlert" class="alert alert-info d-none small mb-2"><i class="fas fa-check-circle"></i> <strong id="selectedStudentText"></strong></div>
                         <button id="confirmBtn" class="btn btn-success btn-sm" onclick="confirmBooking()"> <i class="fas fa-check"></i> Sahkan Tempahan</button>
                     </div>
                 </div>
 
                 <div class="col-md-4">
-                    <h6 class="mb-2">Senarai Pelajar</h6>
-                    <div id="studentList" class="list-group">
-                        <div class="text-center text-muted py-4"><i class="fas fa-inbox"></i> Pilih jantina dan tingkatan</div>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <h6 class="mb-2">Senarai Tempahan</h6>
+                    <h6 class="mb-2 text-center">Senarai Tempahan</h6>
                     <div class="d-flex justify-content-between mb-2">
-                        <div>
-                            <input id="selectAllCheckbox" type="checkbox" class="form-check-input" onchange="toggleSelectAll(this.checked)"> <label class="form-check-label small ms-1">Pilih Semua</label>
-                        </div>
-                        <div>
-                            <button id="bulkDeleteBtn" class="btn btn-danger btn-sm d-none" onclick="openAdminModalForBulkDelete()" disabled aria-hidden="true"><i class="fas fa-trash"></i></button>
-                        </div>
+                        <div></div>
                     </div>
                     <div id="bookedList" class="list-group" style="max-height:420px;overflow:auto">
                         <div class="text-center text-muted py-4"><i class="fas fa-inbox"></i> Tiada tempahan</div>
@@ -89,42 +104,18 @@
             <input id="csvImportFile" class="form-control form-control-sm mb-2" type="file" accept=".csv" onchange="previewImportCSV()">
                 <div id="importPreviewSection" style="display:none"><div class="table-responsive"><table class="table table-sm table-bordered"><thead id="importPreviewHead"></thead><tbody id="importPreviewBody"></tbody></table></div><small id="importRowCount" class="text-muted"></small></div></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button id="confirmImportBtn" class="btn btn-danger btn-sm" onclick="confirmImportStudents()" disabled>Tukar Data Pelajar</button></div></div></div></div>
 
-            <div class="modal fade" id="editJourneyModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Edit Perjalanan</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><label class="form-label small">Keterangan Perjalanan</label><input id="editJourneyText" class="form-control form-control-sm mb-2" type="text"><label class="form-label small">Tarikh / Nota (optional)</label><input id="editJourneyDate" class="form-control form-control-sm mb-2" type="text"><small class="text-muted">Contoh: Khamis, 20 Nov 2025</small></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary btn-sm" onclick="openAdminModalForEditConfirm()">Simpan</button></div></div></div></div>
+            <div class="modal fade" id="editJourneyModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Edit Perjalanan</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><label class="form-label small">Arah Perjalanan</label><select id="editJourneyDirection" class="form-select form-select-sm mb-3" onchange="updateJourneyDestinationOptions()"><option value="">-- Pilih Arah --</option><option value="1">Perjalanan dari MTSD ke Sungai Petani/Gurun/Alor Setar</option><option value="2">Perjalanan dari Sungai Petani/Gurun/Alor Setar ke MTSD</option></select><label class="form-label small">Tarikh dan Masa</label><input id="editJourneyDateTime" class="form-control form-control-sm mb-2" type="datetime-local"></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary btn-sm" onclick="openAdminModalForEditConfirm()">Simpan</button></div></div></div></div>
 
-            <!-- Footer: admin icon placed here -->
-    <style>
-        #adminFooterBtn{position:fixed;right:14px;bottom:14px;z-index:1050}
-        #adminFooterBtn .btn{width:40px;height:40px;border-radius:50%;padding:0;display:inline-flex;align-items:center;justify-content:center}
-        #adminFooterBtn .btn i{font-size:14px}
-    </style>
-        <div id="adminFooterBtn">
-        <span id="adminStatus" class="badge bg-secondary me-2" style="font-size:0.75rem;vertical-align:middle">Admin: Tidak Log Masuk</span>
-        <button id="adminLoginBtn" class="btn btn-primary shadow" title="Admin" onclick="openAdminLoginModal()">
-            <i class="fas fa-user-lock" style="font-size:14px;color:#fff"></i>
-        </button>
-        <button id="footerDownloadBtn" class="btn btn-info shadow ms-2" title="Muat Turun" onclick="downloadSenarai()" disabled style="margin-left:8px;">
-            <i class="fas fa-download" style="font-size:14px;color:#fff"></i>
-        </button>
-        <button id="footerBulkDeleteBtn" class="btn btn-danger shadow ms-2" title="Padam Terpilih" onclick="openAdminModalForBulkDelete()" disabled style="margin-left:8px;">
-            <i class="fas fa-trash" style="font-size:14px;color:#fff"></i>
-        </button>
-        <button id="footerImportBtn" class="btn btn-warning shadow ms-2" title="Import CSV (Admin)" onclick="openAdminImportModal()" style="margin-left:8px;">
-            <i class="fas fa-file-upload" style="font-size:14px;color:#fff"></i>
-        </button>
-        <button id="footerEditJourneyBtn" class="btn btn-secondary shadow ms-2" title="Edit Perjalanan" onclick="openAdminModalForEdit()" aria-label="Edit Perjalanan" style="margin-left:8px;">
-            <i class="fas fa-pen" style="font-size:14px;color:#fff"></i>
-        </button>
-        <button id="adminLogoutBtn" class="btn btn-danger shadow d-none ms-2" title="Log Keluar" onclick="adminLogout()" style="margin-left:6px; margin-top:6px;">
-            <i class="fas fa-power-off" style="font-size:14px;color:#fff"></i>
-        </button>
-    </div>
+            <div class="modal fade" id="adminSettingsModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Tetapan Aplikasi</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><label class="form-label small">Jumlah Bas</label><input id="settingsBusCount" type="number" min="1" max="10" class="form-control form-control-sm mb-2"><div class="form-check form-switch mb-2"><input id="settingsSegregation" class="form-check-input" type="checkbox"><label class="form-check-label">Aktifkan Segregasi Jantina</label></div><small class="text-muted">Ubah jumlah bas akan mengubah kapasiti total (Kapasiti setiap bas: 44).</small></div><div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary btn-sm" onclick="saveAdminSettings()">Simpan</button></div></div></div></div>
+
+            <!-- Footer: removed, admin tools moved to header -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Minimal, cleaned app script
         const BUS_CAPACITY = 44;
-        const MAX_BUSES = 2;
-        const TOTAL_CAPACITY = BUS_CAPACITY * MAX_BUSES;
+        // number of buses (configurable)
+        let busCount = 2;
         const ADMIN_PASSWORD = 'power@123!';
 
         let allStudentsData = [];
@@ -135,12 +126,64 @@
         let pendingDeleteList = [];
         let pendingJourneyEdit = null;
         let isAdmin = false;
+        // Bus segregation setting (persisted)
+        let busSegregationEnabled = true;
+
+        function loadSettings(){
+            const s = localStorage.getItem('busSegregationEnabled');
+            // default segregation disabled
+            busSegregationEnabled = s === null ? false : (s === 'true');
+            const bc = localStorage.getItem('busCount');
+            busCount = bc ? parseInt(bc,10) || 2 : 2;
+        }
+
+        function saveSettings(){
+            localStorage.setItem('busSegregationEnabled', busSegregationEnabled);
+            localStorage.setItem('busCount', String(busCount));
+        }
+
+        function openAdminSettingsModal(){
+            if(!isAdmin){ openAdminLoginModal(); return; }
+            const elCount = document.getElementById('settingsBusCount');
+            const elSeg = document.getElementById('settingsSegregation');
+            if(elCount) elCount.value = busCount;
+            if(elSeg) elSeg.checked = busSegregationEnabled;
+            new bootstrap.Modal(document.getElementById('adminSettingsModal')).show();
+        }
+
+        function saveAdminSettings(){
+            if(!isAdmin){ showMessage('Perlu log masuk sebagai admin','danger'); return; }
+            const elCount = document.getElementById('settingsBusCount');
+            const elSeg = document.getElementById('settingsSegregation');
+            const val = parseInt(elCount.value,10);
+            if(isNaN(val) || val < 1){ showMessage('Sila masukkan bilangan bas yang sah','danger'); return; }
+            busCount = Math.min(10, val);
+            busSegregationEnabled = !!elSeg.checked;
+            saveSettings();
+            updateBookedList();
+            bootstrap.Modal.getInstance(document.getElementById('adminSettingsModal')).hide();
+            showMessage('Tetapan disimpan','success');
+        }
 
         function showMessage(text, type='info'){
             const el = document.getElementById('message'); el.textContent = text; el.className = 'alert alert-' + type; el.style.display='block'; setTimeout(()=>el.style.display='none',3000);
         }
 
-        function formatName(name){ if(!name) return ''; let r = name.toLowerCase().trim().split(/\s+/).map(w=> w.split('-').map(p=> p ? p.split("'").map(s=> s? s.charAt(0).toUpperCase()+s.slice(1):s).join("'") : p).join('-')).join(' '); r=r.replace(/\b(Bin|Binti)\b/gi,m=>m.toLowerCase()); return r; }
+        function formatName(name){ 
+            if(!name) return ''; 
+            let r = name.toLowerCase().trim().split(/\s+/).map(w=> {
+                return w.split('-').map(p=> {
+                    if(!p) return p;
+                    return p.split("'").map((s,idx)=> {
+                        if(!s) return s;
+                        if(idx === 0) return s.charAt(0).toUpperCase() + s.slice(1);
+                        return s;
+                    }).join("'");
+                }).join('-');
+            }).join(' '); 
+            r=r.replace(/\b(Bin|Binti)\b/gi,m=>m.toLowerCase()); 
+            return r; 
+        }
 
         function loadStudentsDataFromStorage(){ const s = localStorage.getItem('studentData'); if(s) { try{ allStudentsData = JSON.parse(s); return true; }catch(e){ console.error(e); } } return false; }
         function saveStudentsDataToStorage(){ localStorage.setItem('studentData', JSON.stringify(allStudentsData)); }
@@ -151,11 +194,54 @@
         function loadJourneyHeader(){ const s = localStorage.getItem('journeyHeader'); if(!s) return; const d=JSON.parse(s); const h=document.getElementById('journeyHeader'); h.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${d.text}<br><small class="text-muted">📅 ${d.date}</small>`; }
         function saveJourneyHeader(text,date){ localStorage.setItem('journeyHeader', JSON.stringify({text,date})); const h=document.getElementById('journeyHeader'); if(h) h.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${text}<br><small class="text-muted">📅 ${date}</small>`; }
 
-        function updateAdminUI(){ const status=document.getElementById('adminStatus'); const l=document.getElementById('adminLoginBtn'); const o=document.getElementById('adminLogoutBtn'); if(isAdmin){ status.textContent='Admin: Log Masuk'; status.className='badge bg-success me-2'; l.classList.add('d-none'); o.classList.remove('d-none'); } else { status.textContent='Admin: Tidak Log Masuk'; status.className='badge bg-secondary me-2'; l.classList.remove('d-none'); o.classList.add('d-none'); } }
+        function updateAdminUI(){ 
+            const adminTools = document.getElementById('adminToolsHeader'); 
+            const loginBtn = document.getElementById('adminLoginHeaderBtn'); 
+            const logoutBtn = document.getElementById('adminLogoutHeaderBtn'); 
+            const downloadBtn = document.getElementById('footerDownloadHeaderBtn');
+            const deleteBtn = document.getElementById('footerBulkDeleteHeaderBtn');
+            const importBtn = document.getElementById('footerImportHeaderBtn');
+            const editBtn = document.getElementById('footerEditJourneyHeaderBtn');
+            const settingsBtn = document.getElementById('footerSettingsHeaderBtn');
+            const resetBtn = document.getElementById('resetAllHeaderBtn');
+            if(isAdmin){ 
+                adminTools.style.display = 'flex'; 
+                loginBtn.style.display = 'none'; 
+                logoutBtn.classList.remove('d-none'); 
+                if(downloadBtn) downloadBtn.style.display = 'inline-flex';
+                if(deleteBtn) deleteBtn.style.display = 'inline-flex';
+                if(importBtn) importBtn.style.display = 'inline-flex';
+                if(editBtn) editBtn.style.display = 'inline-flex';
+                if(settingsBtn) settingsBtn.style.display = 'inline-flex';
+                if(resetBtn) resetBtn.style.display = 'inline-flex';
+            } else { 
+                loginBtn.style.display = 'inline-flex'; 
+                logoutBtn.classList.add('d-none');
+                if(downloadBtn) downloadBtn.style.display = 'none';
+                if(deleteBtn) deleteBtn.style.display = 'none';
+                if(importBtn) importBtn.style.display = 'none';
+                if(editBtn) editBtn.style.display = 'none';
+                if(settingsBtn) settingsBtn.style.display = 'none';
+                if(resetBtn) resetBtn.style.display = 'none';
+            } 
+        }
 
         function openAdminLoginModal(){ document.getElementById('adminPassword').value=''; document.getElementById('adminModalTitle').textContent='Log Masuk Admin'; document.getElementById('adminModalBody').innerHTML = '<label class="form-label small">Kata Laluan Admin:</label><input id="adminPassword" class="form-control form-control-sm" type="password">'; document.getElementById('adminModalFooter').innerHTML = '<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary btn-sm" onclick="doAdminLogin()">Log Masuk</button>'; new bootstrap.Modal(document.getElementById('adminModal')).show(); }
         function doAdminLogin(){ const p = document.getElementById('adminPassword').value; if(p!==ADMIN_PASSWORD){ showMessage('Kata laluan salah','danger'); return; } isAdmin=true; updateAdminUI(); bootstrap.Modal.getInstance(document.getElementById('adminModal')).hide(); showMessage('Berjaya log masuk','success'); }
         function adminLogout(){ isAdmin=false; updateAdminUI(); showMessage('Admin log keluar','info'); }
+
+        function resetAllWithConfirm(){
+            if(!confirm('Reset semua tempahan dan perjalanan?')) return;
+            bookings = {};
+            saveBookings();
+            selectedBulk.clear();
+            localStorage.removeItem('journeyHeader');
+            const h = document.getElementById('journeyHeader');
+            if(h) h.innerHTML = `<i class="fas fa-map-marker-alt"></i> Sila tetapkan perjalanan`;
+            updateBookedList();
+            updateStudentList();
+            showMessage('Semua data di-reset','success');
+        }
 
         function updateStudentsByFilter(){ const g=document.getElementById('genderFilter').value; const t=document.getElementById('classFilter').value; if(!g||!t){ filteredStudents=[]; updateStudentList(); return; } filteredStudents = allStudentsData.filter(s=>s.jantina===g && s.tingkatan===t); filteredStudents.sort((a,b)=>a.nama.localeCompare(b.nama)); updateStudentList(); }
 
@@ -163,24 +249,200 @@
 
         function selectStudent(name){ selectedStudent=name; const alert=document.getElementById('selectedStudentAlert'); const text=document.getElementById('selectedStudentText'); text.textContent=formatName(name); const btn=document.getElementById('confirmBtn'); if(bookings[name]){ alert.className='alert alert-warning small'; btn.disabled=true; } else { alert.className='alert alert-info small'; btn.disabled=false; } alert.classList.remove('d-none'); updateStudentList(); }
 
-        function confirmBooking(){ if(!selectedStudent){ showMessage('Sila pilih pelajar','danger'); return; } if(bookings[selectedStudent]){ showMessage('Sudah menempah','warning'); return; } if(Object.keys(bookings).length>=TOTAL_CAPACITY){ showMessage('Kapasiti penuh','danger'); return; } bookings[selectedStudent]=true; saveBookings(); showMessage('Tempahan disahkan','success'); selectedStudent=null; updateStudentList(); updateBookedList(); }
+        function confirmBooking(){ if(!selectedStudent){ showMessage('Sila pilih pelajar','danger'); return; } if(bookings[selectedStudent]){ showMessage('Sudah menempah','warning'); return; } if(Object.keys(bookings).length>= (BUS_CAPACITY * busCount) ){ showMessage('Kapasiti penuh','danger'); return; } bookings[selectedStudent]=true; saveBookings(); showMessage('Tempahan disahkan','success'); selectedStudent=null; updateStudentList(); updateBookedList(); }
 
-        function updateBookedList(){ const el=document.getElementById('bookedList'); const names=Object.keys(bookings); if(names.length===0){ el.innerHTML='<div class="text-center text-muted py-4"><i class="fas fa-inbox"></i> Tiada tempahan</div>'; document.getElementById('bulkDeleteBtn').disabled=true; const footDownload = document.getElementById('footerDownloadBtn'); if(footDownload) footDownload.disabled = true; updateSelectAllCheckbox(); return; } el.innerHTML=''; const bus1=names.slice(0,BUS_CAPACITY); const bus2=names.slice(BUS_CAPACITY); if(bus1.length){ const h=document.createElement('div'); h.className='list-group-item bg-light'; h.textContent=`Bas 1 (${bus1.length}/${BUS_CAPACITY})`; el.appendChild(h); bus1.forEach((n,i)=>{ const it=document.createElement('div'); it.className='list-group-item d-flex align-items-center'; const cb=document.createElement('input'); cb.type='checkbox'; cb.className='form-check-input me-2'; cb.checked=selectedBulk.has(n); cb.onchange=()=>toggleBulkSelect(n,cb.checked); const span=document.createElement('span'); span.className='small text-primary'; span.textContent=`${i+1}. ${formatName(n)}`; it.appendChild(cb); it.appendChild(span); el.appendChild(it); }); }
-            if(bus2.length){ const h=document.createElement('div'); h.className='list-group-item bg-light mt-2'; h.textContent=`Bas 2 (${bus2.length}/${BUS_CAPACITY})`; el.appendChild(h); bus2.forEach((n,i)=>{ const it=document.createElement('div'); it.className='list-group-item d-flex align-items-center'; const cb=document.createElement('input'); cb.type='checkbox'; cb.className='form-check-input me-2'; cb.checked=selectedBulk.has(n); cb.onchange=()=>toggleBulkSelect(n,cb.checked); const span=document.createElement('span'); span.className='small text-primary'; span.textContent=`${i+1}. ${formatName(n)}`; it.appendChild(cb); it.appendChild(span); el.appendChild(it); }); }
-            // sync both top (hidden) and footer bulk delete buttons + footer download
+        function updateBookedList(){ 
+            const el=document.getElementById('bookedList'); 
+            const names=Object.keys(bookings);
+            
+            // Determine bus assignment depending on segregation setting
+            let bus1final = [];
+            let bus2final = [];
+            if(busSegregationEnabled){
+                const lelaki = names.filter(n => {
+                    const student = allStudentsData.find(s => s.nama === n);
+                    return student?.jantina === 'LELAKI';
+                });
+                const perempuan = names.filter(n => {
+                    const student = allStudentsData.find(s => s.nama === n);
+                    return student?.jantina === 'PEREMPUAN';
+                });
+
+                // Fill Bus 1 with Lelaki, overflow to Bus 2
+                const bus1 = lelaki.slice(0, BUS_CAPACITY);
+                const lelakiremainder = lelaki.slice(BUS_CAPACITY);
+
+                // Fill Bus 2 with Perempuan, plus any Lelaki overflow if space available
+                let bus2 = perempuan.slice(0, BUS_CAPACITY - lelakiremainder.length);
+                bus2 = bus2.concat(lelakiremainder.slice(0, BUS_CAPACITY - bus2.length));
+
+                // Any remaining overflow goes to Bus 1 if space
+                const perempuanoverflow = perempuan.slice(BUS_CAPACITY - lelakiremainder.length);
+                const bus1overflow = perempuanoverflow.slice(0, BUS_CAPACITY - bus1.length);
+                bus1final = bus1.concat(bus1overflow);
+                bus2final = bus2;
+            } else {
+                // Sequential fill (no segregation): fill Bus 1 then Bus 2
+                bus1final = names.slice(0, BUS_CAPACITY);
+                bus2final = names.slice(BUS_CAPACITY, BUS_CAPACITY * busCount);
+            }
+            
+            if(names.length===0){ 
+                el.innerHTML='<div class="text-center text-muted py-4"><i class="fas fa-inbox"></i> Tiada tempahan</div>'; 
+                document.getElementById('bulkDeleteBtn').disabled=true; 
+                const footDownload = document.getElementById('footerDownloadBtn'); 
+                if(footDownload) footDownload.disabled = true; 
+                const headerDownload = document.getElementById('footerDownloadHeaderBtn'); 
+                if(headerDownload) headerDownload.disabled = true; 
+                updateSelectAllCheckbox(); 
+                return; 
+            } 
+            el.innerHTML=''; 
+            
+            if(bus1final.length){ 
+                const h=document.createElement('div'); 
+                h.className='list-group-item bg-light'; 
+                h.textContent=`Bas 1 (${bus1final.length}/${BUS_CAPACITY})`; 
+                el.appendChild(h); 
+                bus1final.forEach((n,i)=>{ 
+                    const it=document.createElement('div'); 
+                    it.className='list-group-item d-flex align-items-center'; 
+                    const cb=document.createElement('input'); 
+                    cb.type='checkbox'; 
+                    cb.className='form-check-input me-2'; 
+                    cb.checked=selectedBulk.has(n); 
+                    cb.onchange=()=>toggleBulkSelect(n,cb.checked); 
+                    const student = allStudentsData.find(s => s.nama === n);
+                    const tingkat = student?.tingkatan || '?';
+                    const span=document.createElement('span'); 
+                    span.className='small text-primary'; 
+                    span.textContent=`${i+1}. ${formatName(n)} (F${tingkat})`; 
+                    it.appendChild(cb); 
+                    it.appendChild(span); 
+                    el.appendChild(it); 
+                }); 
+            }
+            if(bus2final.length){ 
+                const h=document.createElement('div'); 
+                h.className='list-group-item bg-light mt-2'; 
+                h.textContent=`Bas 2 (${bus2final.length}/${BUS_CAPACITY})`; 
+                el.appendChild(h); 
+                bus2final.forEach((n,i)=>{ 
+                    const it=document.createElement('div'); 
+                    it.className='list-group-item d-flex align-items-center'; 
+                    const cb=document.createElement('input'); 
+                    cb.type='checkbox'; 
+                    cb.className='form-check-input me-2'; 
+                    cb.checked=selectedBulk.has(n); 
+                    cb.onchange=()=>toggleBulkSelect(n,cb.checked); 
+                    const student = allStudentsData.find(s => s.nama === n);
+                    const tingkat = student?.tingkatan || '?';
+                    const span=document.createElement('span'); 
+                    span.className='small text-primary'; 
+                    span.textContent=`${i+1}. ${formatName(n)} (F${tingkat})`; 
+                    it.appendChild(cb); 
+                    it.appendChild(span); 
+                    el.appendChild(it); 
+                }); 
+            }
+            // sync all delete and download buttons
             const topBulk = document.getElementById('bulkDeleteBtn');
             const footBulk = document.getElementById('footerBulkDeleteBtn');
+            const headerBulk = document.getElementById('footerBulkDeleteHeaderBtn');
             const footDownload = document.getElementById('footerDownloadBtn');
+            const headerDownload = document.getElementById('footerDownloadHeaderBtn');
             if(topBulk) topBulk.disabled = selectedBulk.size===0;
             if(footBulk) footBulk.disabled = selectedBulk.size===0;
+            if(headerBulk) headerBulk.disabled = selectedBulk.size===0;
             if(footDownload) footDownload.disabled = names.length===0;
-            updateSelectAllCheckbox(); }
+            if(headerDownload) headerDownload.disabled = names.length===0;
+            updateSelectAllCheckbox(); 
+        }
 
-        function toggleBulkSelect(name,checked){ if(checked) selectedBulk.add(name); else selectedBulk.delete(name); const topBulk = document.getElementById('bulkDeleteBtn'); const footBulk = document.getElementById('footerBulkDeleteBtn'); if(topBulk) topBulk.disabled = selectedBulk.size===0; if(footBulk) footBulk.disabled = selectedBulk.size===0; updateSelectAllCheckbox(); }
-        function toggleSelectAll(checked){ const names=Object.keys(bookings); if(checked) names.forEach(n=>selectedBulk.add(n)); else selectedBulk.clear(); updateBookedList(); const footBulk = document.getElementById('footerBulkDeleteBtn'); if(footBulk) footBulk.disabled = selectedBulk.size===0; }
+        function toggleBulkSelect(name,checked){ if(checked) selectedBulk.add(name); else selectedBulk.delete(name); const topBulk = document.getElementById('bulkDeleteBtn'); const footBulk = document.getElementById('footerBulkDeleteBtn'); const headerBulk = document.getElementById('footerBulkDeleteHeaderBtn'); if(topBulk) topBulk.disabled = selectedBulk.size===0; if(footBulk) footBulk.disabled = selectedBulk.size===0; if(headerBulk) headerBulk.disabled = selectedBulk.size===0; updateSelectAllCheckbox(); }
+        function toggleSelectAll(checked){ const names=Object.keys(bookings); if(checked) names.forEach(n=>selectedBulk.add(n)); else selectedBulk.clear(); updateBookedList(); const footBulk = document.getElementById('footerBulkDeleteBtn'); const headerBulk = document.getElementById('footerBulkDeleteHeaderBtn'); if(footBulk) footBulk.disabled = selectedBulk.size===0; if(headerBulk) headerBulk.disabled = selectedBulk.size===0; }
         function updateSelectAllCheckbox(){ const cb=document.getElementById('selectAllCheckbox'); if(!cb) return; const names=Object.keys(bookings); cb.checked = names.length>0 && selectedBulk.size===names.length; }
 
-        function downloadSenarai(){ const names=Object.keys(bookings); if(names.length===0){ showMessage('Tiada tempahan','warning'); return; } const header=document.getElementById('journeyHeader').innerText.trim(); let content='SENARAI TEMPAHAN\n\n'+header+'\n\n'; names.forEach((n,i)=> content+=`${i+1}. ${formatName(n)}\n`); const a=document.createElement('a'); a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(content); a.download='Senarai_Tempahan_Bas.txt'; document.body.appendChild(a); a.click(); a.remove(); showMessage('Dimuat turun','success'); }
+        function downloadSenarai(){ 
+            const names=Object.keys(bookings); 
+            if(names.length===0){ showMessage('Tiada tempahan','warning'); return; } 
+            const header=document.getElementById('journeyHeader').innerText.trim().replace(/📅\s*/,''); 
+            const now = new Date();
+            
+            // Format timestamp for logging: yyyymmdd_hhmmss
+            const yyyy = now.getFullYear();
+            const MM = String(now.getMonth() + 1).padStart(2,'0');
+            const dd = String(now.getDate()).padStart(2,'0');
+            const HH = String(now.getHours()).padStart(2,'0');
+            const mm = String(now.getMinutes()).padStart(2,'0');
+            const ss = String(now.getSeconds()).padStart(2,'0');
+            const timestamp = `${yyyy}${MM}${dd}_${HH}${mm}${ss}`;
+            
+            // Determine bus assignment depending on segregation setting
+            let bus1final = [];
+            let bus2final = [];
+            if(busSegregationEnabled){
+                const lelaki = names.filter(n => {
+                    const student = allStudentsData.find(s => s.nama === n);
+                    return student?.jantina === 'LELAKI';
+                });
+                const perempuan = names.filter(n => {
+                    const student = allStudentsData.find(s => s.nama === n);
+                    return student?.jantina === 'PEREMPUAN';
+                });
+
+                // Fill Bus 1 with Lelaki, overflow to Bus 2
+                const bus1 = lelaki.slice(0, BUS_CAPACITY);
+                const lelakiremainder = lelaki.slice(BUS_CAPACITY);
+
+                // Fill Bus 2 with Perempuan, plus any Lelaki overflow if space available
+                let bus2 = perempuan.slice(0, BUS_CAPACITY - lelakiremainder.length);
+                bus2 = bus2.concat(lelakiremainder.slice(0, BUS_CAPACITY - bus2.length));
+
+                // Any remaining overflow goes to Bus 1 if space
+                const perempuanoverflow = perempuan.slice(BUS_CAPACITY - lelakiremainder.length);
+                const bus1overflow = perempuanoverflow.slice(0, BUS_CAPACITY - bus1.length);
+                bus1final = bus1.concat(bus1overflow);
+                bus2final = bus2;
+            } else {
+                // Sequential fill (no segregation): fill Bus 1 then Bus 2
+                bus1final = names.slice(0, BUS_CAPACITY);
+                bus2final = names.slice(BUS_CAPACITY, BUS_CAPACITY * busCount);
+            }
+            
+            let content='Tempahan Bas Pulang Bermalam\n';
+            content+=`\n${header}\n`;
+            content+=`\nJumlah Pelajar: ${names.length}\n`;
+            
+            if(bus1final.length){ 
+                content+=`\n--- BAS 1 (${bus1final.length}/${BUS_CAPACITY}) ---\n`;
+                bus1final.forEach((n,i)=>{ 
+                    const student = allStudentsData.find(s=>s.nama===n);
+                    const tingkat = student?.tingkatan || '?';
+                    const fFormat = `F${tingkat}`;
+                    content+=`${i+1}. ${formatName(n)} (${fFormat})\n`;
+                }); 
+            }
+            if(bus2final.length){ 
+                content+=`\n--- BAS 2 (${bus2final.length}/${BUS_CAPACITY}) ---\n`;
+                bus2final.forEach((n,i)=>{ 
+                    const student = allStudentsData.find(s=>s.nama===n);
+                    const tingkat = student?.tingkatan || '?';
+                    const fFormat = `F${tingkat}`;
+                    content+=`${i+1}. ${formatName(n)} (${fFormat})\n`;
+                }); 
+            }
+            
+            content+=`\n---\n${timestamp}`;
+            
+            const a=document.createElement('a'); 
+            a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(content); 
+            a.download='Senarai_Tempahan_Bas.txt'; 
+            document.body.appendChild(a); 
+            a.click(); 
+            a.remove(); 
+            showMessage('Dimuat turun','success'); 
+        }
 
         function openAdminModalForBulkDelete(){
             if (selectedBulk.size === 0) return;
@@ -192,31 +454,65 @@
                 deleteAfterAuth();
                 return;
             }
+            // Show modal with select all option for non-admin
+            const modalBody = document.getElementById('adminModalBody');
             document.getElementById('adminPassword').value = '';
+            modalBody.innerHTML = '<label class="form-label small">Pilih semua:</label><div class="form-check"><input id="adminDeleteSelectAll" type="checkbox" class="form-check-input" onchange="toggleSelectAllInDeleteModal(this.checked)"><label class="form-check-label small ms-1">Pilih Semua</label></div><br><label class="form-label small">Kata Laluan Admin:</label><input id="adminPassword" class="form-control form-control-sm" type="password">';
+            document.getElementById('adminModalTitle').textContent = 'Padam Tempahan';
+            document.getElementById('adminModalFooter').innerHTML = '<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button><button class="btn btn-danger btn-sm" onclick="deleteAfterAuth()">Padam</button>';
             new bootstrap.Modal(document.getElementById('adminModal')).show();
+        }
+
+        function toggleSelectAllInDeleteModal(checked){
+            if(checked){ selectedBulk.clear(); Object.keys(bookings).forEach(n=>selectedBulk.add(n)); } else { selectedBulk.clear(); }
         }
         function deleteAfterAuth(){ if(!isAdmin){ const p=document.getElementById('adminPassword').value; if(p!==ADMIN_PASSWORD){ showMessage('Kata laluan salah','danger'); return; } } if(pendingDeleteList.length>0){ let c=0; pendingDeleteList.forEach(n=>{ if(bookings[n]){ delete bookings[n]; c++; } }); saveBookings(); selectedBulk.clear(); pendingDeleteList=[]; updateBookedList(); showMessage(`${c} tempahan dipadam`,'success'); bootstrap.Modal.getInstance(document.getElementById('adminModal')).hide(); return; } showMessage('Tiada yang dipadam','info'); }
 
         function openAdminModalForEdit(){
             // populate modal inputs from saved journeyHeader if present
             const stored = localStorage.getItem('journeyHeader');
-            let text = '';
-            let date = '';
-            if(stored){ try{ const d = JSON.parse(stored); text = d.text||''; date = d.date||''; }catch(e){}
-            }
-            document.getElementById('editJourneyText').value = text;
-            document.getElementById('editJourneyDate').value = date;
+            let direction = '';
+            let dateTimeValue = '';
+            if(stored){ try{ const d = JSON.parse(stored); const text = d.text||''; const date = d.date||''; if(text.includes('ke MTSD')){ direction='2'; } else { direction='1'; } dateTimeValue = date; }catch(e){} }
+            document.getElementById('editJourneyDirection').value = direction;
+            document.getElementById('editJourneyDateTime').value = dateTimeValue;
+            updateJourneyDestinationOptions();
             new bootstrap.Modal(document.getElementById('editJourneyModal')).show();
         }
 
+        function updateJourneyDestinationOptions(){
+            // Destination selection removed; direction alone determines journey text
+        }
+
+        function formatDateTimeDisplay(isoDateTime){
+            if(!isoDateTime) return '';
+            const dt = new Date(isoDateTime);
+            const days = ['Minggu','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
+            const months = ['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Dis'];
+            const day = days[dt.getDay()];
+            const date = dt.getDate();
+            const month = months[dt.getMonth()];
+            const year = dt.getFullYear();
+            let hours = dt.getHours();
+            const mins = String(dt.getMinutes()).padStart(2,'0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            const hoursStr = String(hours).padStart(2,'0');
+            return `${day}, ${date} ${month} ${year} ${hoursStr}:${mins} ${ampm}`;
+        }
+
         function openAdminModalForEditConfirm(){
-            const text = document.getElementById('editJourneyText').value.trim();
-            const date = document.getElementById('editJourneyDate').value.trim();
-            if(!text){ showMessage('Sila masukkan keterangan perjalanan','danger'); return; }
+            const direction = document.getElementById('editJourneyDirection').value;
+            const dateTime = document.getElementById('editJourneyDateTime').value;
+            if(!direction){ showMessage('Sila pilih arah perjalanan','danger'); return; }
+            if(!dateTime){ showMessage('Sila pilih tarikh dan masa','danger'); return; }
+            let text = direction === '1' ? 'Perjalanan dari MTSD ke Sungai Petani/Gurun/Alor Setar' : 'Perjalanan dari Sungai Petani/Gurun/Alor Setar ke MTSD';
+            const dateDisplay = formatDateTimeDisplay(dateTime);
             // If admin logged in, save directly
-            if(isAdmin){ saveJourneyHeader(text,date); bootstrap.Modal.getInstance(document.getElementById('editJourneyModal')).hide(); showMessage('Perjalanan dikemaskini','success'); return; }
+            if(isAdmin){ saveJourneyHeader(text,dateDisplay); bootstrap.Modal.getInstance(document.getElementById('editJourneyModal')).hide(); showMessage('Perjalanan dikemaskini','success'); return; }
             // require admin auth: store pending and show admin modal
-            pendingJourneyEdit = { text, date };
+            pendingJourneyEdit = { text, date: dateDisplay };
             // hide edit modal while asking for admin password
             const editModalEl = document.getElementById('editJourneyModal');
             const editModalInst = bootstrap.Modal.getInstance(editModalEl);
@@ -254,7 +550,7 @@
 
         function confirmImportStudents(){ if(!isAdmin){ const p=document.getElementById('adminImportPassword').value; if(p!==ADMIN_PASSWORD){ document.getElementById('importMessage').textContent='Kata laluan salah'; document.getElementById('importMessage').className='alert alert-danger'; document.getElementById('importMessage').style.display='block'; return; } } const f=document.getElementById('csvImportFile').files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ const csv=e.target.result; const lines=csv.split(/\r?\n/).filter(Boolean); const headers=lines[0].split(',').map(h=>h.trim().toUpperCase()); const rows=[]; for(let i=1;i<lines.length;i++){ const vals=lines[i].split(','); const obj={}; headers.forEach((h,idx)=> obj[h]= (vals[idx]||'').trim()); rows.push(obj); } allStudentsData = rows.map(row=>({ nama: row['NAMA']||'', jantina: row['JANTINA']||'', tingkatan: row['TINGKATAN']||'' })); saveStudentsDataToStorage(); bookings={}; saveBookings(); selectedBulk.clear(); updateStudentsByFilter(); updateBookedList(); bootstrap.Modal.getInstance(document.getElementById('adminImportModal')).hide(); showMessage(`Diimport ${allStudentsData.length} pelajar`,'success'); }; r.readAsText(f,'utf-8'); }
 
-        document.addEventListener('DOMContentLoaded', async ()=>{ loadBookings(); loadJourneyHeader(); await loadStudentsData(); updateAdminUI(); updateStudentList(); updateBookedList(); });
+        document.addEventListener('DOMContentLoaded', async ()=>{ loadBookings(); loadJourneyHeader(); await loadStudentsData(); loadSettings(); updateAdminUI(); updateStudentList(); updateBookedList(); });
     </script>
 </body>
 </html>
