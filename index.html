@@ -26,6 +26,9 @@
                 <button id="footerDownloadHeaderBtn" class="btn btn-sm p-1" title="Muat Turun" onclick="downloadSenarai()" disabled style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
                     <i class="fas fa-download"></i>
                 </button>
+                <button id="footerDownloadNonBookedHeaderBtn" class="btn btn-sm p-1" title="Muat Turun (Tidak Tempah)" onclick="downloadNonBooked()" disabled style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
+                    <i class="fas fa-user-clock"></i>
+                </button>
                 <button id="footerBulkDeleteHeaderBtn" class="btn btn-sm p-1" title="Padam Terpilih" onclick="openAdminModalForBulkDelete()" disabled style="width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px">
                     <i class="fas fa-trash"></i>
                 </button>
@@ -234,6 +237,7 @@
             const importBtn = document.getElementById('footerImportHeaderBtn');
             const editBtn = document.getElementById('footerEditJourneyHeaderBtn');
             const settingsBtn = document.getElementById('footerSettingsHeaderBtn');
+            const nonBookedBtn = document.getElementById('footerDownloadNonBookedHeaderBtn');
             const resetBtn = document.getElementById('resetAllHeaderBtn');
             if(isAdmin){ 
                 adminTools.style.display = 'flex'; 
@@ -241,6 +245,7 @@
                 logoutBtn.classList.remove('d-none'); 
                 logoutBtn.style.display = 'inline-flex';
                 if(downloadBtn) downloadBtn.style.display = 'inline-flex';
+                if(nonBookedBtn) nonBookedBtn.style.display = 'inline-flex';
                 if(deleteBtn) deleteBtn.style.display = 'inline-flex';
                 if(importBtn) importBtn.style.display = 'inline-flex';
                 if(editBtn) editBtn.style.display = 'inline-flex';
@@ -251,6 +256,7 @@
                 logoutBtn.classList.add('d-none');
                 logoutBtn.style.display = 'none';
                 if(downloadBtn) downloadBtn.style.display = 'none';
+                if(nonBookedBtn) nonBookedBtn.style.display = 'none';
                 if(deleteBtn) deleteBtn.style.display = 'none';
                 if(importBtn) importBtn.style.display = 'none';
                 if(editBtn) editBtn.style.display = 'none';
@@ -327,6 +333,8 @@
                 if(footDownload) footDownload.disabled = true; 
                 const headerDownload = document.getElementById('footerDownloadHeaderBtn'); 
                 if(headerDownload) headerDownload.disabled = true; 
+                const headerNonBookedEarly = document.getElementById('footerDownloadNonBookedHeaderBtn');
+                if(headerNonBookedEarly) headerNonBookedEarly.disabled = true;
                 updateSelectAllCheckbox(); 
                 return; 
             } 
@@ -389,6 +397,10 @@
             if(headerBulk) headerBulk.disabled = selectedBulk.size===0;
             if(footDownload) footDownload.disabled = names.length===0;
             if(headerDownload) headerDownload.disabled = names.length===0;
+            // enable/disable header non-booked download button
+            const headerNonBooked = document.getElementById('footerDownloadNonBookedHeaderBtn');
+            const unbookedCount = allStudentsData.filter(s=>!bookings[s.nama]).length;
+            if(headerNonBooked) headerNonBooked.disabled = unbookedCount===0;
             updateSelectAllCheckbox(); 
         }
 
@@ -470,11 +482,39 @@
             
             const a=document.createElement('a'); 
             a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(content); 
-            a.download='Senarai_Tempahan_Bas.txt'; 
+            a.download=`Senarai_Tempahan_Bas_${timestamp}.txt`;
             document.body.appendChild(a); 
             a.click(); 
             a.remove(); 
             showMessage('Dimuat turun','success'); 
+        }
+
+        function downloadNonBooked(){
+            // names that did NOT book
+            const unbooked = allStudentsData.filter(s => !bookings[s.nama]);
+            if(unbooked.length===0){ showMessage('Tiada pelajar yang belum menempah','warning'); return; }
+            const header = document.getElementById('journeyHeader').innerText.trim();
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const MM = String(now.getMonth() + 1).padStart(2,'0');
+            const dd = String(now.getDate()).padStart(2,'0');
+            const HH = String(now.getHours()).padStart(2,'0');
+            const mm = String(now.getMinutes()).padStart(2,'0');
+            const ss = String(now.getSeconds()).padStart(2,'0');
+            const timestamp = `${yyyy}${MM}${dd}_${HH}${mm}${ss}`;
+            let content = 'Senarai Pelajar Tidak Menempah\n';
+            content += `\n${header}\n`;
+            content += `\nJumlah Tidak Menempah: ${unbooked.length}\n`;
+            unbooked.forEach((s,i)=>{
+                const tingkat = s.tingkatan || '?';
+                const fFormat = 'F' + tingkat;
+                content += `${i+1}. ${formatName(s.nama)} (${fFormat})\n`;
+            });
+            content += `\n---\n${timestamp}`;
+            const a=document.createElement('a');
+            a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(content);
+            a.download = `Senarai_Tidak_Tempah_${timestamp}.txt`;
+            document.body.appendChild(a); a.click(); a.remove(); showMessage('Dimuat turun','success');
         }
 
         function openAdminModalForBulkDelete(){
