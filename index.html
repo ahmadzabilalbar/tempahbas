@@ -202,7 +202,12 @@
                     if(!p) return p;
                     return p.split("'").map((s,idx)=> {
                         if(!s) return s;
+                        // If this is the first segment (before apostrophe) -> Title case
+                        // If the original chunk starts with an apostrophe (p[0] === "'") then
+                        // the segment after that leading apostrophe should be Title case too (e.g. "'Aqeef")
                         if(idx === 0) return s.charAt(0).toUpperCase() + s.slice(1);
+                        if(p.charAt(0) === "'") return s.charAt(0).toUpperCase() + s.slice(1);
+                        // otherwise (apostrophe in middle) keep lowercase segment (e.g. Mus'ab)
                         return s;
                     }).join("'");
                 }).join('-');
